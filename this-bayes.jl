@@ -1,0 +1,59 @@
+using SparseBayes
+include("this-tools.jl")
+
+function this_bayes(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{<:Integer}, dmax::Int64; opts=SBOpts(nitr=500, free_basis=[1]), settings=SBSettings())
+    T, n = size(X)
+
+    if size(X) != size(Y)
+        @info "Dimensions of states and derivatives do not match."
+        return nothing
+    end
+
+    # retrieve values of monomials at each time step
+    θ, d = get_θd(X, dmax)
+
+    idx_mon = Dict{Int64, Vector{Int64}}() # (monomial index) => (nodes involved in monomial)
+    for i in 1:size(d)[1]
+		mon = d[i,:][d[i,:] .!= 0]
+		if length(mon) == length(union(mon)) # skips monomials with repeated factors, e.g., xᵢxⱼ²
+			idx_mon[i] = sort(mon)
+		end
+	end
+
+    # run sparse Bayes
+    out, diagnostics = sparse_bayes(θ, Y; opts=opts, settings=settings)
+
+    # calculate relative error
+    err = norm(Y - θ*out.value, 1)
+    relerr = err/norm(Y, 1)
+
+    # reconstruct adjacency tensors
+    Ainf = Dict{Int64,Matrix{Float64}}(o => zeros(0,o+1) for o in vcat(1, ooi))
+    Ainf_gamma = Dict{Int64,Matrix{Float64}}(o => zeros(0, o+1) for o in vcat(1, ooi))
+
+    idx_coeff = Dict{Int64,Vector{Int64}}() # (monomial index) => (nodes for which monomial coeff is nonzero)
+    for id in keys(idx_mon)
+		aaa = setdiff((1:n)[abs.(out.value[id, :]) .> 1e-8],idx_mon[id]) # ensures monomial involving xᵢ does not get inferred for xᵢ
+		if !isempty(aaa)
+			idx_coeff[id] = aaa
+		end
+	end
+
+    gamma_mat = zeros(Float64, size(out.value))
+    for i in 1:n
+        relevant = findall(out.value[:, i] .!= 0.0)
+        gamma_mat[relevant, i] = diagnostics.gamma[i]
+    end
+
+	for id in keys(idx_coeff)
+		ii = idx_coeff[id]
+		jj = idx_mon[id]
+		o = length(jj)+1
+		Ainf[o]       = vcat(Ainf[o], [ii repeat(jj', length(ii), 1) out.value[id,ii]]) # last col is inferred coeffs
+        Ainf_gamma[o] = vcat(Ainf_gamma[o], [ii repeat(jj', length(ii), 1) gamma_mat[id, ii]]) # last col is gamma (well-determinedness factor)
+	end
+
+    return Ainf, Ainf_gamma, relerr, out, diagnostics
+end
+
+    
