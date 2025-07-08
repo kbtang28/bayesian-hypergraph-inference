@@ -5,7 +5,7 @@ using LinearAlgebra, Combinatorics, Statistics
 	get_θd(X::Matrix{Float64}, dmax::Int64, i0::Int64=1)
 	get_thetad(X::Matrix{Float64}, dmax::Int64, i0::Int64=1)
 
-Returns the matrix of values of the monomials up to degree `dmax` for each time step of `X`. As well as the list of the agents involved in each of the monomials (mostly for indexing purpose).
+Returns the matrix of values of the monomials up to degree `dmax` for each time step of `X` as well as the list of the agents involved in each of the monomials (mostly for indexing purpose).
 
 	get_θ(X::Matrix{Float64}, dmax::Int64, i0::Int64=1)
 	get_theta(X::Matrix{Float64}, dmax::Int64, i0::Int64=1)
@@ -17,26 +17,27 @@ Returns only the monomials.
 Returns only the list of agents involved.
 
 _INPUT_:\\
-`X`: Time series of the agents' states. Rows indices are the agents' indices and the columns indices are the time steps.\\
+`X`: Time series of the agents' states. Column indices are the agents' indices and the row indices are the time steps.\\
 `dmax`: Maximal monomial degree to be considered.\\ 
 `i0`: Index of the first agent to consider in the list (mostly for recursive calling purpose).
 
 _OUTPUT_:\\
-`θ`: Matrix of the monomial values. Rows indices are the monomial indices and columns indices are the time steps.\\
+`θ`: Matrix of the monomial values. Column indices are the monomial indices and row indices are the time steps.\\
 `d`: List of the agents involved in each monomial of `θ`. Each row has `dmax` elements. If one element appears multiple times, it means that its degree is larger that 1 in the monomial. If there are some zeros in the row, it means that the monomial has degree smaller than `dmax`. 
 """
-function get_θd(X::Matrix{Float64}, dmax::Int64, i0::Int64=1)
-	n,T = size(X)
 
-	θ = ones(1,T)
+function get_θd(X::Matrix{Float64}, dmax::Int64, i0::Int64=1)
+	T,n = size(X)
+
+	θ = ones(T)
 	d = zeros(Int64,1,dmax)
 
 	if dmax == 0
 		return θ,d
 	else
 		for i in 1:n
-			θ0,d0 = get_θd(X[i:n,:],dmax-1,i)
-			θ = vcat(θ,repeat(X[[i,],:],size(θ0)[1],1).*θ0)
+			θ0,d0 = get_θd(X[:, i:n],dmax-1,i)
+			θ = hcat(θ, θ0.*repeat(X[:, [i,]], 1, size(θ0,2)))
 			d = vcat(d,[d0 i*ones(Int64,size(d0)[1],1)])
 		end
 
@@ -51,16 +52,16 @@ function get_thetad(X::Matrix{Float64}, dmax::Int64, i0::Int64=1)
 end
 
 function get_θ(X::Matrix{Float64}, dmax::Int64, i0::Int64=1)
-	n,T = size(X)
+	T,n = size(X)
 
-	θ = ones(1,T)
+	θ = ones(T)
 
 	if dmax == 0
 		return θ
 	else
 		for i in 1:n
-			θ0 = get_θ(X[i:n,:],dmax-1,i)
-			θ = vcat(θ,repeat(X[[i,],:],size(θ0)[1],1).*θ0)
+			θ0 = get_θ(X[:, i:n], dmax-1, i)
+			θ = hcat(θ, θ0.*repeat(X[:, [i,]], 1, size(θ0,2)))
 		end
 
 		return θ
