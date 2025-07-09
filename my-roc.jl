@@ -4,7 +4,7 @@ using Printf
 # A0 is the inferred adjacency, A is the ground truth (assumed boolean adjacency list)
 # hyperedges are distinct by their first index, the ordering of the other indices does not matter.
 function my_ROC(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0)
-	function logmsg(level, msg)
+	function logmsg(level, msg, verbosity)
 		if verbosity >= level
 			println(msg)
 		end
@@ -40,7 +40,7 @@ function my_ROC(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0)
 	# complete the inference randomly
 	mtp = length(I) - tp[end] # missing true positives
 	mfp = max_edges-length(I)-fp[end] # missing false positives
-	logmsg(1, @sprintf("%d, %d", mtp, mfp))
+	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity)
 	t = shuffle([ones(mtp);zeros(mfp)])
 	tt = 1 .- t
 	s = [sum(t[1:i]) for i in 1:length(t)] # true positives get inferred
@@ -56,7 +56,7 @@ function my_ROC(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0)
 end
 
 function my_ROC(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, A2::Matrix{Float64}, n::Int64; verbosity=0)
-	function logmsg(level, msg)
+	function logmsg(level, msg, verbosity)
 		if verbosity >= level
 			println(msg)
 		end
@@ -102,7 +102,7 @@ function my_ROC(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64},
 	# complete the inference randomly
 	mtp = length(I) - tp[end] # missing true positives
 	mfp = max_edges-length(I)-fp[end] # missing false positives
-	logmsg(1, @sprintf("%d, %d", mtp, mfp))
+	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity)
 	t = shuffle([ones(mtp);zeros(mfp)])
 	tt = 1 .- t
 	s = [sum(t[1:i]) for i in 1:length(t)] # true positives get inferred
