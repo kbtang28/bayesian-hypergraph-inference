@@ -147,6 +147,24 @@ function f_kuramoto_3rd(θ::Vector{Float64}, A2l::Array{Float64,2}, A3l::Array{F
 	return fθ
 end
 
+# version for ForwardDiff
+function f_kuramoto_3rd(θ, A2::Array{Float64,2}, A3::Array{Float64,3}, P::Vector{Float64}, ϕ2::Float64=0., ϕ3::Float64=0.)
+	n = length(θ)
+	
+	fθ = similar(θ, 0)
+	for i in 1:n
+		x = P[i]
+		for j in 1:n
+			x -= A2[i,j]*(sin(θ[i]-θ[j]-ϕ2) + sin(ϕ2))
+			for k in 1:n
+				x -= A3[i,j,k]*(sin(2*θ[i]-θ[j]-θ[k] - ϕ3) + sin(ϕ3))
+			end
+		end
+		push!(fθ,x)
+	end
+	return fθ
+end
+
 function f_kuramoto_3rd(θ::Vector{Float64}, A2::Array{Float64,2}, A3::Array{Float64,3}, P::Vector{Float64}, ϕ2::Float64=0., ϕ3::Float64=0.)
 	n = length(θ)
 	
@@ -165,12 +183,28 @@ function f_kuramoto_3rd(θ::Vector{Float64}, A2::Array{Float64,2}, A3::Array{Flo
 end
 
 function f_kuramoto_3rd(Θ::Matrix{Float64}, A2::Array{Float64,2}, A3::Array{Float64,3}, P::Vector{Float64}, ϕ2::Float64=0., ϕ3::Float64=0.)
-	n,T = size(Θ)
+	T, n = size(Θ)
 	# fΘ = zeros(n,0)
-	fΘ = Matrix{Float64}(undef, n, T)
+	fΘ = Matrix{Float64}(undef, T, n)
 	for t in 1:T
 		# fΘ = [fΘ f_kuramoto_3rd(Θ[:,t],A2,A3,P,ϕ2,ϕ3)]
-		fΘ[:, t] = f_kuramoto_3rd(Θ[:,t],A2,A3,P,ϕ2,ϕ3)
+		fΘ[t, :] = f_kuramoto_3rd(Θ[t, :],A2,A3,P,ϕ2,ϕ3)
 	end
 	return fΘ
+end
+
+# mutating version for ODE solver
+function f_kuramoto_3rd!(dθ, θ, p, t)
+	A2, A3, ωs, ϕ2, ϕ3 = p
+
+	n = length(θ)
+	for i in 1:n
+		dθ[i] = ωs[i]
+		for j in 1:n
+			dθ[i] -= A2[i,j]*(sin(θ[i]-θ[j]-ϕ2) + sin(ϕ2))
+			for k in 1:n
+				dθ[i] -= A3[i,j,k]*(sin(2*θ[i]-θ[j]-θ[k] - ϕ3) + sin(ϕ3))
+			end
+		end
+	end
 end
