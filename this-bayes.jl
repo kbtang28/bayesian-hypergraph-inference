@@ -1,7 +1,7 @@
 using SparseBayes
 include("this-tools.jl")
 
-function this_bayes(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{<:Integer}, dmax::Int64; opts=SBOpts(nitr=500, free_basis=[1]), settings=SBSettings())
+function this_bayes(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{<:Integer}, dmax::Int64; opts=SBOpts(nitr=500, free_basis=[1]), settings=SBSettings(), ctrls=SBCtrlSettings(beta_update_frequency=3))
     T, n = size(X)
 
     if size(X) != size(Y)
@@ -21,7 +21,7 @@ function this_bayes(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{<:Intege
 	end
 
     # run sparse Bayes
-    out, diagnostics = sparse_bayes(θ, Y; opts=opts, settings=settings)
+    out, diagnostics = sparse_bayes(θ, Y; opts=opts, settings=settings, ctrls=ctrls)
 
     # calculate relative error
     err = norm(Y - θ*out.value, 1)
@@ -29,7 +29,6 @@ function this_bayes(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{<:Intege
 
     # reconstruct adjacency tensors
     Ainf = Dict{Int64,Matrix{Float64}}(o => zeros(0,o+1) for o in vcat(1, ooi))
-    Ainf_gamma = Dict{Int64,Matrix{Float64}}(o => zeros(0, o+1) for o in vcat(1, ooi))
 
     idx_coeff = Dict{Int64,Vector{Int64}}() # (monomial index) => (nodes for which monomial coeff is nonzero)
     for id in keys(idx_mon)
@@ -39,21 +38,12 @@ function this_bayes(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{<:Intege
 		end
 	end
 
-    gamma_mat = zeros(Float64, size(out.value))
-    for i in 1:n
-        relevant = findall(out.value[:, i] .!= 0.0)
-        gamma_mat[relevant, i] = diagnostics.gamma[i]
-    end
-
 	for id in keys(idx_coeff)
 		ii = idx_coeff[id]
 		jj = idx_mon[id]
 		o = length(jj)+1
 		Ainf[o]       = vcat(Ainf[o], [ii repeat(jj', length(ii), 1) out.value[id,ii]]) # last col is inferred coeffs
-        Ainf_gamma[o] = vcat(Ainf_gamma[o], [ii repeat(jj', length(ii), 1) gamma_mat[id, ii]]) # last col is gamma (well-determinedness factor)
 	end
 
-    return Ainf, Ainf_gamma, relerr, out, diagnostics
+    return Ainf, relerr, out, diagnostics
 end
-
-    
