@@ -3,10 +3,10 @@ using Printf
 # ROC curve for adjacency lists
 # A0 is the inferred adjacency, A is the ground truth (assumed boolean adjacency list)
 # Hyperedges are distinct by their first index, the ordering of the other indices does not matter.
-function my_ROC(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0)
-	function logmsg(level, msg, verbosity)
+function my_ROC(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0, io::IO=stdout)
+	function logmsg(level, msg, verbosity, io)
 		if verbosity >= level
-			println(msg)
+			println(io, msg)
 		end
 	end
 	
@@ -40,7 +40,7 @@ function my_ROC(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0)
 	# complete the inference randomly
 	mtp = length(I) - tp[end] # missing true positives
 	mfp = max_edges-length(I)-fp[end] # missing false positives
-	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity)
+	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity, io)
 	t = shuffle([ones(mtp);zeros(mfp)])
 	tt = 1 .- t
 	s = [sum(t[1:i]) for i in 1:length(t)] # true positives get inferred
@@ -55,10 +55,10 @@ function my_ROC(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0)
 	return tpr,fpr
 end
 
-function my_ROC(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, A2::Matrix{Float64}, n::Int64; verbosity=0)
-	function logmsg(level, msg, verbosity)
+function my_ROC(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, A2::Matrix{Float64}, n::Int64; verbosity=0, io::IO=stdout)
+	function logmsg(level, msg, verbosity, io)
 		if verbosity >= level
-			println(msg)
+			println(io, msg)
 		end
 	end
 
@@ -104,7 +104,7 @@ function my_ROC(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64},
 	# complete the inference randomly
 	mtp = length(I) - tp[end] # missing true positives
 	mfp = max_edges-length(I)-fp[end] # missing false positives
-	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity)
+	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity, io)
 	t = shuffle([ones(mtp);zeros(mfp)])
 	tt = 1 .- t
 	s = [sum(t[1:i]) for i in 1:length(t)] # true positives get inferred
@@ -120,10 +120,10 @@ function my_ROC(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64},
 end
 
 # Precision-recall curve for adjacency lists
-function my_PRC(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0)
-	function logmsg(level, msg, verbosity)
+function my_PRC(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0, io::IO=stdout)
+	function logmsg(level, msg, verbosity, io)
 		if verbosity >= level
-			println(msg)
+			println(io, msg)
 		end
 	end
 	
@@ -157,7 +157,7 @@ function my_PRC(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0)
 	# complete the inference randomly
 	mtp = length(I) - tp[end] # missing true positives
 	mfp = max_edges-length(I)-fp[end] # missing false positives
-	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity)
+	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity, io)
 	t = shuffle([ones(mtp);zeros(mfp)])
 	tt = 1 .- t
 	s = [sum(t[1:i]) for i in 1:length(t)] # true positives get inferred
@@ -178,10 +178,10 @@ function my_PRC(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0)
 	return precision, recall
 end
 
-function my_PRC(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, A2::Matrix{Float64}, n::Int64; verbosity=0)
-	function logmsg(level, msg, verbosity)
+function my_PRC(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, A2::Matrix{Float64}, n::Int64; verbosity=0, io::IO=stdout)
+	function logmsg(level, msg, verbosity, io)
 		if verbosity >= level
-			println(msg)
+			println(io, msg)
 		end
 	end
 
@@ -227,7 +227,7 @@ function my_PRC(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64},
 	# complete the inference randomly
 	mtp = length(I) - tp[end] # missing true positives
 	mfp = max_edges-length(I)-fp[end] # missing false positives
-	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity)
+	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity, io)
 	t = shuffle([ones(mtp);zeros(mfp)])
 	tt = 1 .- t
 	s = [sum(t[1:i]) for i in 1:length(t)] # true positives get inferred
