@@ -20,7 +20,7 @@ _OUTPUT_:\\
 `coeff`: Matrix of coefficents obtained by SINDy. The column indices are the agents' indices and the columns indices are the indices of the monomials in the Taylor series.\\
 `relerr`: Relative error, i.e., `err` normalized by the magnitude of `Y`.
 """
-function this(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{Int64}, dmax::Int64, λ::Float64=.1, ρ::Float64=1., niter::Int64=10)
+function this(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{Int64}, dmax::Int64, λ::Float64=.1, ρ::Float64=1., niter::Int64=10; with_scaling::Bool=false)
 	# Size of the data matrix. 
 	T, n = size(X)
 
@@ -31,7 +31,15 @@ function this(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{Int64}, dmax::
 
 	# Running THIS ##############################################################
 	# Retrieve the values of the monomials at each time step.
-	θ, d = get_θd(X,dmax)
+	if with_scaling
+		θ0, d = get_θd(X,dmax)
+		# Normalize columns of θ0
+		col_norms = norm.(eachcol(θ0))
+		θ = θ0./col_norms'
+	else
+		θ, d = get_θd(X, dmax)
+	end
+
 	idx_mon = Dict{Int64,Vector{Int64}}()
 	for i in 1:size(d)[1]
 		mon = d[i,:][d[i,:] .!= 0]
@@ -41,8 +49,16 @@ function this(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{Int64}, dmax::
 	end
 
 	# Running SINDy
-	coeff, err = mySINDy(θ,Y,λ,ρ,niter)
-	relerr = err/norm(Y,1)
+	coeff, err = mySINDy(θ, Y, λ, ρ, niter)
+	if with_scaling
+		coeff = coeff./col_norms
+		err = norm(Y - θ0*coeff, 1)
+		relerr = err/norm(Y,1)
+	else
+		relerr = err/norm(Y,1)
+	end
+
+	# Rescale coefficients
 
 	#############################################################################
 
