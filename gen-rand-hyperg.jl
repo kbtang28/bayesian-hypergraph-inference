@@ -42,3 +42,12 @@ function gnm_random_hyperg(n, t2, t3)
 
     return A2, A3, A2l, A3l
 end
+
+function hyperg_connected(A2::Array{<:Real, 2}, A3::Array{<:Real, 3})
+    n, _ = size(A2)
+
+    deg2 = vec(sum(A2, dims=2))
+    deg3 = vec(sum(A3, dims=[1,2]))
+
+    return all((deg2 .> 0.0) .|| (deg3 .> 0.0))
+end
