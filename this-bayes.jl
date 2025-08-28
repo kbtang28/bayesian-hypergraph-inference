@@ -42,7 +42,7 @@ function this_bayes(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{<:Intege
 		ii = idx_coeff[id]
 		jj = idx_mon[id]
 		o = length(jj)+1
-		Ainf[o]       = vcat(Ainf[o], [ii repeat(jj', length(ii), 1) out.value[id,ii]]) # last col is inferred coeffs
+		Ainf[o] = vcat(Ainf[o], [ii repeat(jj', length(ii), 1) out.value[id,ii]]) # last col is inferred coeffs
 	end
 
     return Ainf, relerr, out, diagnostics
