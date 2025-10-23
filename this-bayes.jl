@@ -12,6 +12,24 @@ function this_bayes(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{<:Intege
     # retrieve values of monomials at each time step
     θ, d = get_θd(X, dmax)
 
+    # run sparse Bayes
+    out, diagnostics = sparse_bayes(θ, Y; opts=opts, settings=settings, ctrls=ctrls)
+
+    # # calculate relative error
+    # err = norm(Y - θ*out.value, 1)
+    # relerr = err/norm(Y, 1)
+
+    # reconstruct adjacency tensors
+    Ainf = get_Ainf(out.value, ooi, dmax)
+
+    return Ainf, out.value, out, diagnostics
+end
+
+function get_Ainf(coeff, ooi, dmax)
+    _, n = size(coeff)
+
+    d = get_d(n, dmax)
+
     idx_mon = Dict{Int64, Vector{Int64}}() # (monomial index) => (nodes involved in monomial)
     for i in 1:size(d)[1]
 		mon = d[i,:][d[i,:] .!= 0]
@@ -20,19 +38,11 @@ function this_bayes(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{<:Intege
 		end
 	end
 
-    # run sparse Bayes
-    out, diagnostics = sparse_bayes(θ, Y; opts=opts, settings=settings, ctrls=ctrls)
-
-    # calculate relative error
-    err = norm(Y - θ*out.value, 1)
-    relerr = err/norm(Y, 1)
-
-    # reconstruct adjacency tensors
     Ainf = Dict{Int64,Matrix{Float64}}(o => zeros(0,o+1) for o in vcat(1, ooi))
 
     idx_coeff = Dict{Int64,Vector{Int64}}() # (monomial index) => (nodes for which monomial coeff is nonzero)
     for id in keys(idx_mon)
-		aaa = setdiff((1:n)[abs.(out.value[id, :]) .> 1e-8],idx_mon[id]) # ensures monomial involving xᵢ does not get inferred for xᵢ
+		aaa = setdiff((1:n)[abs.(coeff[id, :]) .> 1e-8],idx_mon[id]) # ensures monomial involving xᵢ does not get inferred for xᵢ
 		if !isempty(aaa)
 			idx_coeff[id] = aaa
 		end
@@ -42,13 +52,13 @@ function this_bayes(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{<:Intege
 		ii = idx_coeff[id]
 		jj = idx_mon[id]
 		o = length(jj)+1
-		Ainf[o] = vcat(Ainf[o], [ii repeat(jj', length(ii), 1) out.value[id,ii]]) # last col is inferred coeffs
+		Ainf[o] = vcat(Ainf[o], [ii repeat(jj', length(ii), 1) coeff[id,ii]]) # last col is inferred coeffs
 	end
 
-    return Ainf, relerr, out, diagnostics
+    return Ainf
 end
 
-function this_bayes_whitened(X::Matrix{Float64}, Y::Matrix{Float64}, Σ, ooi::Vector{<:Integer}, dmax::Int64; verbosity=2)
+function this_bayes_whitened(X::Matrix{Float64}, Y::Matrix{Float64}, F, ooi::Vector{<:Integer}, dmax::Int64; verbosity=2)
     T, n = size(X)
 
     if size(X) != size(Y)
@@ -68,7 +78,6 @@ function this_bayes_whitened(X::Matrix{Float64}, Y::Matrix{Float64}, Σ, ooi::Ve
 	end
 
     # whiten
-    F = cholesky(Σ)
     θw = F.L \ θ
     Yw = F.L \ Y
     
@@ -77,9 +86,9 @@ function this_bayes_whitened(X::Matrix{Float64}, Y::Matrix{Float64}, Σ, ooi::Ve
     settings = SBSettings(beta=1.0)
     out, diagnostics = sparse_bayes(θw, Yw; opts=opts, settings=settings)
 
-    # calculate relative error
-    err = norm(Y - θ*out.value, 1)
-    relerr = err/norm(Y, 1)
+    # # calculate relative error
+    # err = norm(Yw - θw*out.value, 1)
+    # relerr = err/norm(Yw, 1)
 
     # reconstruct adjacency tensors
     Ainf = Dict{Int64,Matrix{Float64}}(o => zeros(0,o+1) for o in vcat(1, ooi))
@@ -99,5 +108,5 @@ function this_bayes_whitened(X::Matrix{Float64}, Y::Matrix{Float64}, Σ, ooi::Ve
 		Ainf[o] = vcat(Ainf[o], [ii repeat(jj', length(ii), 1) out.value[id,ii]]) # last col is inferred coeffs
 	end
 
-    return Ainf, relerr, out, diagnostics
+    return Ainf, coeff, out, diagnostics
 end
