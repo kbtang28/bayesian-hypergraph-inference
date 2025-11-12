@@ -1,4 +1,4 @@
-using SparseArrays
+using LinearAlgebra, SparseArrays
 
 function centralFDcoeffs(n::Int)
     # 1st order central finite difference coefficients
@@ -26,7 +26,7 @@ function FD(N_pt::Int, N_dom::Int, dt::Float64)
     function stencil(coeffs, N_pt, N_dom)
         nrows = N_pt - N_dom
         diags = [(k-1) => fill(c, nrows) for (k,c) in enumerate(coeffs)]
-        return spdiagm(N_pt - N_dom, N_pt, diags...)
+        return spdiagm(nrows, N_pt, diags...)
     end
 
     if N_dom == 2
@@ -57,6 +57,68 @@ function FD(N_pt::Int, N_dom::Int, dt::Float64)
     else
         coeffs = centralFDcoeffs(N_dom)
         L_D1 = stencil(coeffs, N_pt, N_dom)/dt
+    end
+
+    return L_I, L_D1
+end
+
+function FD(N_pt::Int, N_dom::Int, dt::Float64, m::Int)
+    # N_pt  = number of data pts
+    # N_dom = order of accuracy (num of pts used - 1)
+    # dt    = size of timestep (assuming regularly sampled)
+    # m     = stride
+
+    @assert N_dom >= 2 "N_dom must be positive even integer."
+    @assert mod(N_dom, 2) == 0 "Only even N_dom supported."
+
+    function stencil(coeffs, N_pt, N_dom, m)
+        w = N_dom/2 # stencil half-width
+
+        coarse_idx = Int.(collect((w + 1) : m : (N_pt - w)))
+        N_coarse = length(coarse_idx)
+
+        rows = Int[]
+        cols = Int[]
+        vals = Float64[]
+
+        for (r, center) in enumerate(coarse_idx)
+            idxs = center - w : center + w
+            append!(rows, fill(r, length(coeffs)))
+            append!(cols, idxs)
+            append!(vals, coeffs)
+        end
+
+        return sparse(rows, cols, vals, N_coarse, N_pt)
+    end
+
+    if N_dom == 2
+        L_I = stencil([0; 1; 0], N_pt, N_dom, m)
+
+        coeffs = [-1/2; 0; 1/2]
+        L_D1 = stencil(coeffs, N_pt, N_dom, m)/dt
+    elseif N_dom == 4
+        L_I = stencil([0; 0; 1; 0; 0], N_pt, N_dom, m)
+
+        coeffs = [1/12; -2/3; 0; 2/3; -1/12]
+        L_D1 = stencil(coeffs, N_pt, N_dom, m)/dt
+    elseif N_dom == 6
+        L_I = stencil([0; 0; 0; 1; 0; 0; 0], N_pt, N_dom, m)
+
+        coeffs = [-1/60; 3/20; -3/4; 0; 3/4; -3/20; 1/60]
+        L_D1 = stencil(coeffs, N_pt, N_dom, m)/dt
+    elseif N_dom == 8
+        L_I = stencil([0; 0; 0; 0; 1; 0; 0; 0; 0], N_pt, N_dom, m)
+
+        coeffs = [1/280; -4/105; 1/5; -4/5; 0; 4/5; -1/5; 4/105; -1/280]
+        L_D1 = stencil(coeffs, N_pt, N_dom, m)/dt
+    elseif N_dom == 10
+        L_I = stencil([0; 0; 0; 0; 0; 1; 0; 0; 0; 0; 0], N_pt, N_dom, m)
+
+        coeffs = [-1/1260; 5/504; -5/84; 5/21; -5/6; 0; 5/6; -5/21; 5/84; -5/504; 1/1260]
+        L_D1 = stencil(coeffs, N_pt, N_dom, m)/dt
+    else
+        coeffs = centralFDcoeffs(N_dom)
+        L_D1 = stencil(coeffs, N_pt, N_dom, m)/dt
     end
 
     return L_I, L_D1
