@@ -251,7 +251,13 @@ function my_PRC(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64},
 end
 
 # F1 score for adjacency lists
-function my_F1(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; ε=0.0)
+function my_F1(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0, io::IO=stdout)
+	function logmsg(level, msg, verbosity, io)
+		if verbosity >= level
+			println(io, msg)
+		end
+	end
+
 	m,o = size(A0)
 	mm,o = size(A)
 	o -= 1 # one col of A0 is inferred coeff
@@ -259,20 +265,29 @@ function my_F1(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; ε=0.0)
 	max_edges = n*binomial(n-1,o-1) # number of edges involving exactly o distinct nodes
 	# max_edges = n*sum(binomial(n-i,o-i) for i in 1:o)
 
-	full_I0 = [A0[i,1:o] for i in 1:m] # vec of inferred edges
+	I0 = [A0[i,1:o] for i in 1:m] # vec of inferred edges
 	V0 = A0[:, o+1] # vec of inferred coeffs
-	I0 = full_I0[V0 .> ε] # keep only inferred edges with inferred coeff above ε
 
 	I = [A[i,1:o] for i in 1:mm] # vec of ground truth edges 
 
 	tp = sum(in(I0).(I))
 	fp = length(I0) - tp
 	fn = length(I) - tp
+	
+	mtp = length(I) - tp
+	mfp = max_edges-length(I)-fp
+	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity, io)
 
 	return (2*tp) / (2*tp + fp + fn)
 end
 
-function my_F1(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, A2::Matrix{Float64}, n::Int64; ε=0.0)
+function my_F1(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, A2::Matrix{Float64}, n::Int64; verbosity=0, io::IO=stdout)
+	function logmsg(level, msg, verbosity, io)
+		if verbosity >= level
+			println(io, msg)
+		end
+	end
+
 	m1,o1 = size(A01)
 	mm1,o1 = size(A1)
 	o1 -= 1
@@ -289,9 +304,8 @@ function my_F1(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, 
 
 	I01 = [A01[i,1:o1] for i in 1:m1]
 	I02 = [A02[i,1:o2] for i in 1:m2]
-	full_I0 = [I01;I02] # vec of inferred edges (pairwise and triadic)
+	I0 = [I01;I02] # vec of inferred edges (pairwise and triadic)
 	V0 = [A01[:,o1+1]; A02[:,o2+1]] # vec of inferred coeffs
-	I0 = full_I0[V0 .> ε] # keep only inferred edges with inferred coeff above ε
 
 	I1 = [A1[i,1:o1] for i in 1:mm1]
 	I2 = [A2[i,1:o2] for i in 1:mm2]
@@ -300,6 +314,10 @@ function my_F1(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, 
 	tp = sum(in(I0).(I))
 	fp = length(I0) - tp
 	fn = length(I) - tp
+
+	mtp = length(I) - tp
+	mfp = max_edges-length(I)-fp
+	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity, io)
 
 	return (2*tp) / (2*tp + fp + fn)
 end
