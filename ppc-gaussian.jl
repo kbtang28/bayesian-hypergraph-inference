@@ -1,4 +1,6 @@
-using Random, Printf, SparseBayes, LinearAlgebra, Dates, DelimitedFiles
+import Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
+
+using Random, Printf, SparseBayes, LinearAlgebra, Dates, DelimitedFiles, Distributions
 
 include("gen-rand-hyperg.jl")
 include("hyperg-kuramoto.jl")
@@ -9,9 +11,11 @@ include("performance-measures.jl")
 Random.seed!(1234)
 
 # helper function
-function ppc(X_og, ρ, σ; K=1000, nitr_noise=10)
+function ppc(X_og, ρ, σ; K=1000, nitr_noise=100)
     @printf(SB_logfile, "Testing ρ = %.2f, σ = %.2f...\n", ρ, σ)
     @printf(ROC_logfile, "Testing ρ = %.2f, σ = %.2f...\n", ρ, σ)    
+
+    T, n = size(X_og)
 
     # state variables and derivatives
     X = ρ*X_og
@@ -39,8 +43,9 @@ function ppc(X_og, ρ, σ; K=1000, nitr_noise=10)
         Ξs = sample_joint_posterior(out, Θ, Y; nsamples=K)
 
         D_obs = [sum( norm.(eachrow( (Y - Θ*Ξ)/σ )).^2 ) for Ξ in Ξs]
-        D_rep = [sum( norm.( eachrow( randn(size(Y)) )).^2 ) for _ in Ξs]
-        pval[itr] = sum(D_obs .<= D_rep)/K
+        # D_rep = [sum( norm.( eachrow( randn(size(Y)) )).^2 ) for _ in Ξs]
+        # pval[itr] = sum(D_obs .<= D_rep)/K
+        pval[itr] = sum( ccdf.( Chisq(T*n), D_obs ) )/K
 
         # measure quality of inference - pairwise + triadic model
         Ainf, _, _, _ = this_bayes(X, Y, [2,3], 2; opts=opts, settings=settings)
@@ -56,7 +61,8 @@ function ppc(X_og, ρ, σ; K=1000, nitr_noise=10)
     flush(SB_logfile)
     flush(ROC_logfile)
 
-    return mean(pval), mean(auc), mean(auc3)
+    # return mean(pval), mean(auc), mean(auc3)
+    return pval, auc, auc3
 end
 
 # hypergraph model
@@ -66,7 +72,7 @@ p = (A2, A3, zeros(n), π/4, π/4)
 
 # experimental settings
 ρs = 10 .^(range(-2, 0, 11))
-σs = [0.1, 0.8]
+σs = [0.05, 0.5]
 
 # ----------- RUN EXPERIMENT -----------
 
@@ -77,8 +83,8 @@ global SB_logfile = open("out/logs/ppcs-$(timestamp)-SB.txt", "w")
 global ROC_logfile = open("out/logs/ppcs-$(timestamp)-ROC.txt", "w")
 
 # generate state data (geometry fixed throughout experiments)
-nitr = 10
-Xs = [(rand(200, n) .- 0.5) for _ in 1:nitr]
+nitr = 100
+X = (rand(200, n) .- 0.5)
 
 pvals = zeros(Float64, nitr, length(ρs), length(σs))
 aucs = zeros(Float64, nitr, length(ρs), length(σs))
@@ -86,12 +92,13 @@ auc3s = zeros(Float64, nitr, length(ρs), length(σs))
 
 for (k, σ) in enumerate(σs)
     for (j, ρ) in enumerate(ρs)
-        for i in 1:nitr
-            pval, auc, auc3 = ppc(Xs[i], ρ, σ)
-            pvals[i,j,k] = pval
-            aucs[i,j,k] = auc
-            auc3s[i,j,k] = auc3
-        end
+        # for i in 1:nitr
+            # @printf("Testing (ρ, σ) = (%.2f, %.2f), X sample %d/%d\n", ρ, σ, i, nitr)
+            pval, auc, auc3 = ppc(X, ρ, σ, nitr_noise=nitr)
+            pvals[:,j,k] = pval
+            aucs[:,j,k] = auc
+            auc3s[:,j,k] = auc3
+        # end
     end
 end
 
