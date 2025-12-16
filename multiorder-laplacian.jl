@@ -31,7 +31,7 @@ function laplacian(T::AbstractArray; sparse_out=true, rescale_per_node=false)
             L = L ./ d
         end
 
-        return L, K, A, avgK
+        return L, avgK
     end
 end
 
@@ -41,7 +41,7 @@ function multiorder_laplacian(Ts; gammas=Dict(), sparse_out=true, rescale_per_no
 
     # loop through each order
     for (k, T) in Ts
-        L, K, A, avgK = laplacian(T; sparse_out=sparse_out, rescale_per_node=rescale_per_node)
+        L, avgK = laplacian(T; sparse_out=sparse_out, rescale_per_node=rescale_per_node)
 
         γ = get(gammas, k, 1.0) # get gamma or 1.0 (default)
         weight = γ / (avgK == 0 ? 1.0 : avgK)
@@ -49,7 +49,7 @@ function multiorder_laplacian(Ts; gammas=Dict(), sparse_out=true, rescale_per_no
         term = weight * L
         Lmul = Lmul === nothing ? term : Lmul + term
 
-        per[k] = (L, K, A, avgK, γ, weight)
+        per[k] = (L, avgK, γ, weight)
     end
 
     return Lmul, per
@@ -93,7 +93,7 @@ function laplacian(E::AbstractMatrix, n::Integer; sparse_out=true, rescale_per_n
     avgK = mean(K)
 
     # build sparse adjacency A
-    A = sparse(I, J, ones(length(I)), n, n) ./ (factorial(d-1)) 
+    A = sparse(I, J, ones(length(I)), n, n) 
 
     # Laplacian
     L = spdiagm(0 => d .* K) - A
@@ -106,7 +106,7 @@ function laplacian(E::AbstractMatrix, n::Integer; sparse_out=true, rescale_per_n
         L = L ./ d
     end
 
-    return L, K, A, avgK
+    return L, avgK
 end
 
 function multiorder_laplacian(Es, n::Integer; gammas=Dict(), sparse_out=true, rescale_per_node=false)
@@ -115,7 +115,7 @@ function multiorder_laplacian(Es, n::Integer; gammas=Dict(), sparse_out=true, re
 
     # loop through each order
     for (k, E) in Es
-        L, K, A, avgK = laplacian(E, n; sparse_out=sparse_out, rescale_per_node=rescale_per_node)
+        L, avgK = laplacian(E, n; sparse_out=sparse_out, rescale_per_node=rescale_per_node)
 
         γ = get(gammas, k, 1.0) # get gamma or 1.0 (default)
         weight = γ / (avgK == 0 ? 1.0 : avgK)
@@ -123,7 +123,7 @@ function multiorder_laplacian(Es, n::Integer; gammas=Dict(), sparse_out=true, re
         term = weight * L
         Lmul = Lmul === nothing ? term : Lmul + term
 
-        per[k] = (L, K, A, avgK, γ, weight)
+        per[k] = (L, avgK, γ, weight)
     end
 
     return Lmul, per
