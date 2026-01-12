@@ -323,6 +323,10 @@ function my_F1(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, 
 end
 
 # AUC for ROC curve or precision-recall curve
-function get_auc(ys::Vector{Float64}, xs::Vector{Float64})
-	return sum(ys[2:end].*(xs[2:end]-xs[1:end-1])) # right-hand rule
+function get_auc(ys::Vector{Float64}, xs::Vector{Float64}; rule="RH")
+	if rule == "RH"
+		return sum(ys[2:end].*(xs[2:end]-xs[1:end-1])) # right-hand rule
+	elseif rule == "T"
+		return sum(0.5 * (xs[2:end] .- xs[1:end-1]) .* (ys[1:end-1] .+ ys[2:end]))
+	end
 end
