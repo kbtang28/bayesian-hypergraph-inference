@@ -170,7 +170,7 @@ function shuffle_hyperedges(A3, A3l, p)
     return cA3, cA3l
 end
 
-function node_swap!(A3, A3l, nid1, nid2; id_temp=-1)
+function _swap_nodes!(A3, A3l, nid1::Integer, nid2::Integer; id_temp=-1)
     while any(x -> x == id_temp, A3l)
         id_temp -= 1
     end
@@ -200,11 +200,24 @@ function node_swap!(A3, A3l, nid1, nid2; id_temp=-1)
     A3[:, :, [nid1, nid2]] = A3[:, :, [nid2, nid1]]
 end
 
-function node_swap(A3, A3l, nid1, nid2; id_temp=-1)
+function swap_nodes(A2, A3, A3l, n_swap::Integer)
+    n, _ = size(A2)
+
+    # find ids for nodes with smallest and largest pairwise degree
+    K2_dict = Dict(collect(1:n) .=> degrees(A2))
+
+    nsmallest = sort(collect(K2_dict), by = x -> x.second)[1:n_swap]
+    nid_smallest = [x.first for x in nsmallest]
+
+    nlargest = sort(collect(K2_dict), by = x -> x.second, rev=true)[1:n_swap]
+    nid_largest = [x.first for x in nlargest]
+
+    # perform n_swap node swaps
     cA3 = deepcopy(A3)
     cA3l = deepcopy(A3l)
-
-    node_swap!(cA3, cA3l, nid1, nid2; id_temp=id_temp)
+    for (nid_small, nid_large) in zip(nid_smallest, nid_largest)
+        _swap_nodes!(cA3, cA3l, Int(nid_small), Int(nid_large))
+    end
 
     return cA3, cA3l
 end
