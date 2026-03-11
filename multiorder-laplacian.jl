@@ -129,12 +129,12 @@ function multiorder_laplacian(Es, n::Integer; gammas=Dict(), sparse_out=true, re
     return Lmul, per
 end
 
-function compute_lyap_multi(Es, n::Integer, weights; rescale_per_node=true)
+function compute_lyap_multi(Es, n::Integer, weights; rescale_per_node=true, sorted=true)
     @assert length(Es) == length(weights) "dicts of adjacency lists and weights must be of the same length!"
 
     Lmul, _ = multiorder_laplacian(Es, n; gammas=weights, sparse_out=false, rescale_per_node=rescale_per_node)
     ei_vals = eigvals(Lmul)
-    lyap_vals = -ei_vals
+    lyap_vals = sort(-ei_vals, rev=true)
 
     return lyap_vals
 end
