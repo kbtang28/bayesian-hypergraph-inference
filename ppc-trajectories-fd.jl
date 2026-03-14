@@ -73,7 +73,7 @@ end
     end
 
     function partition_D(D, d, i)
-        tri_cols = [(length(unique(r)) == 2) & (!in(r)(0)) & (!in(r)(1)) for r in eachrow(d)]
+        tri_cols = [(length(unique(r)) == 2) & (!in(r)(0)) & (!in(r)(i)) for r in eachrow(d)]
         # tri_cols = [(!in(r)(0)) for r in eachrow(d)]
 
         D1 = D[:, .!tri_cols]
