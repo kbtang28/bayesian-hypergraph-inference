@@ -186,3 +186,36 @@ function one2dim(Ainf::Dict{Int64,Matrix{Float64}}, d::Int64=1)
 
 	return AAinf
 end
+
+function get_Ainf(coeff, ooi, dmax)
+    _, n = size(coeff)
+
+    d = get_d(n, dmax)
+
+    idx_mon = Dict{Int64, Vector{Int64}}() # (monomial index) => (nodes involved in monomial)
+    for i in 1:size(d)[1]
+		mon = d[i,:][d[i,:] .!= 0]
+		if length(mon) == length(union(mon)) # skips monomials with repeated factors, e.g., xᵢxⱼ²
+			idx_mon[i] = sort(mon)
+		end
+	end
+
+    Ainf = Dict{Int64,Matrix{Float64}}(o => zeros(0,o+1) for o in vcat(1, ooi))
+
+    idx_coeff = Dict{Int64,Vector{Int64}}() # (monomial index) => (nodes for which monomial coeff is nonzero)
+    for id in keys(idx_mon)
+		aaa = setdiff((1:n)[abs.(coeff[id, :]) .> 1e-8],idx_mon[id]) # ensures monomial involving xᵢ does not get inferred for xᵢ
+		if !isempty(aaa)
+			idx_coeff[id] = aaa
+		end
+	end
+
+	for id in keys(idx_coeff)
+		ii = idx_coeff[id]
+		jj = idx_mon[id]
+		o = length(jj)+1
+		Ainf[o] = vcat(Ainf[o], [ii repeat(jj', length(ii), 1) coeff[id,ii]]) # last col is inferred coeffs
+	end
+
+    return Ainf
+end
