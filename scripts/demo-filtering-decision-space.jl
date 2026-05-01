@@ -369,11 +369,11 @@ sc5 = scatter!(ax2, sds_to_plot[true_to_plot .& .!pwise_to_plot], abs.(coeffs_to
 ax1.title = "(a) Low noise (σ = 0.1)"
 ax2.title = "(b) High noise (σ = 0.5)"
 
-ax2.xlabel = rich("conditional posterior s.d. σ", subscript("m | –m"))
-ax1.ylabel = "coefficient magnitude |ξₘ|"
-ax2.ylabel = "coefficient magnitude |ξₘ|"
+ax2.xlabel = rich("Conditional posterior s.d. σ", subscript("m | –m"))
+ax1.ylabel = "Coefficient magnitude |ξₘ|"
+ax2.ylabel = "Coefficient magnitude |ξₘ|"
 
-axislegend(ax2, [sc4, sc5, sc3, sc2, sc1], ["pairwise TP", "triadic TP", "pairwise FP (from Δ)", "triadic FP", "pairwise FP"], nbanks=2, labelsize=8pt, rowgap=-7, padding=(0,4,-2,-2), position=:rb, patchlabelgap=1)
+axislegend(ax2, [sc4, sc5, sc3, sc2, sc1], ["Pairwise TP", "Triadic TP", "Pairwise FP (from Δ)", "Triadic FP", "Pairwise FP"], nbanks=2, labelsize=8pt, rowgap=-7, padding=(0,4,-2,-2), position=:rb, patchlabelgap=1)
 
 save("figs/decision-space.png", fig, dpi=300)
 display(fig)
