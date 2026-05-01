@@ -133,9 +133,9 @@ for (j, t2) in enumerate(t2_array)
     end
 end
 
-writedlm("out/sparsity/bayes-aurocs-$(timestamp)-sparsity-2.txt", bayes_aurocs)
-writedlm("out/sparsity/this-aurocs-$(timestamp)-sparsity-2.txt", this_aurocs)
-writedlm("out/sparsity/bayes-auprcs-$(timestamp)-sparsity-2.txt", bayes_auprcs)
-writedlm("out/sparsity/this-auprcs-$(timestamp)-sparsity-2.txt", this_auprcs)
+writedlm("out/sparsity/bayes-aurocs-$(timestamp)-sparsity.txt", bayes_aurocs)
+writedlm("out/sparsity/this-aurocs-$(timestamp)-sparsity.txt", this_aurocs)
+writedlm("out/sparsity/bayes-auprcs-$(timestamp)-sparsity.txt", bayes_auprcs)
+writedlm("out/sparsity/this-auprcs-$(timestamp)-sparsity.txt", this_auprcs)
 
 rmprocs(workers())
