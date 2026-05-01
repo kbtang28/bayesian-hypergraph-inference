@@ -2408,7 +2408,7 @@ uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 version = "1.12.0"
 
 [[deps.SparseBayes]]
-deps = ["BenchmarkTools", "Dates", "DelimitedFiles", "LinearAlgebra", "Printf", "Statistics"]
+deps = ["BenchmarkTools", "Dates", "DelimitedFiles", "LinearAlgebra", "Printf", "Random", "Statistics", "Test"]
 path = "../SparseBayes"
 uuid = "780c597a-6b79-4593-816a-d9a0924fb77b"
 version = "0.0.0"
