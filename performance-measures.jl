@@ -251,7 +251,7 @@ function my_PRC(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64},
 end
 
 # F1 score for adjacency lists
-function my_F1(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0, io::IO=stdout)
+function my_F1(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0, io::IO=stdout, extra_out=false)
 	function logmsg(level, msg, verbosity, io)
 		if verbosity >= level
 			println(io, msg)
@@ -278,10 +278,14 @@ function my_F1(A0::Matrix{Float64}, A::Matrix{Float64}, n::Int64; verbosity=0, i
 	mfp = max_edges-length(I)-fp
 	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity, io)
 
-	return (2*tp) / (2*tp + fp + fn)
+	if extra_out
+		return (2*tp) / (2*tp + fp + fn), tp / (tp + fp), tp / length(I)
+	else
+		return (2*tp) / (2*tp + fp + fn)
+	end
 end
 
-function my_F1(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, A2::Matrix{Float64}, n::Int64; verbosity=0, io::IO=stdout)
+function my_F1(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, A2::Matrix{Float64}, n::Int64; verbosity=0, io::IO=stdout, extra_out=false)
 	function logmsg(level, msg, verbosity, io)
 		if verbosity >= level
 			println(io, msg)
@@ -319,7 +323,11 @@ function my_F1(A01::Matrix{Float64}, A1::Matrix{Float64}, A02::Matrix{Float64}, 
 	mfp = max_edges-length(I)-fp
 	logmsg(1, @sprintf("%d, %d", mtp, mfp), verbosity, io)
 
-	return (2*tp) / (2*tp + fp + fn)
+	if extra_out
+		return (2*tp) / (2*tp + fp + fn), tp / (tp + fp), tp / length(I)
+	else
+		return (2*tp) / (2*tp + fp + fn)
+	end
 end
 
 # AUC for ROC curve or precision-recall curve
