@@ -29,7 +29,7 @@ n = 8
 A2, A3, A2l, A3l = gnm_random_hyperg(n, 0.4, 0.1)
 p = (A2, 2.0*A3, zeros(n), π/4, π/4)
 
-tspan = (0.0, 0.70) # over which to integrate trajectories
+tspan = (0.0, 0.60) # over which to integrate trajectories
 n_ics = 30 # number of ICs to sample
 dt = 0.01 # fine resolution timestep
 t_sample = tspan[1] : dt : tspan[2] # timesteps at which to sample
@@ -103,7 +103,7 @@ end
         clean_Xs = Matrix{Float64}[]
         for u0 in u0s
             prob = ODEProblem(f_kuramoto_3rd!, (ρ/2)*u0, tspan, p)
-            sol = solve(prob)
+            sol = solve(prob, Tsit5())
             X = stack(sol(t_sample).u; dims=1)
             push!(clean_Xs, X)
         end
@@ -153,7 +153,7 @@ end
             end
             
             # compute p-values
-            pval[itr] = sum( T_rep .>= T_obs ) / K
+            pval[itr] = sum( T_rep .> T_obs ) / K
 
             # measure quality of inference - full model
             full_opts = SBOpts(verbosity=0, nitr=1000, free_basis=[1])
@@ -186,7 +186,7 @@ while ic_ct <= n_ics
 
     # check we synchronize(ish)...
     prob = ODEProblem(f_kuramoto_3rd!, u0, tspan, p_const)
-    sol = solve(prob)
+    sol = solve(prob, Tsit5())
     if maximum( abs.( sol(t_sample[end]) ) ) > 1.0
         continue
     end

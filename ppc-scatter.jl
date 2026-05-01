@@ -139,7 +139,7 @@ end
             end
             
             # compute p-values
-            pval[itr] = sum( T_rep .>= T_obs ) / K
+            pval[itr] = sum( T_rep .> T_obs ) / K
 
             # measure quality of inference - full model
             full_opts = SBOpts(verbosity=0, nitr=1000, free_basis=[1])
