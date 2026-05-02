@@ -3,7 +3,7 @@ using CairoMakie, DelimitedFiles, Random
 import ColorSchemes: cmr_ember
 pv_blue = "#5bb4e9"
 
-Random.seed!(1)
+Random.seed!(1)K
 
 # top row - scattered data, Gaussian noise on analytical derivatives
 ρs = 10 .^ range(-2.0, 0.0, 11)
@@ -11,14 +11,15 @@ Random.seed!(1)
 nlevels = 3
 nitr = 100
 lowclip = 0.05
-file_prefix = "ppc-scatter"
+file_prefix = "scatter"
 xlabel = "sampling box size"
 
 # read in data
-pvals = readdlm("out/ppc/"*file_prefix*"-pvals.txt"); pvals = reshape(pvals, nitr, length(ρs), length(σs))
-aucs = readdlm("out/ppc/"*file_prefix*"-aucs.txt"); aucs = reshape(aucs, nitr, length(ρs), length(σs))
-auc3s = readdlm("out/ppc/"*file_prefix*"-auc3s.txt"); auc3s = reshape(auc3s, nitr, length(ρs), length(σs))
-F1s = readdlm("out/ppc/"*file_prefix*"-F1s.txt"); F1s = reshape(F1s, 3, nlevels, nitr, length(ρs), length(σs))
+results_dir = joinpath(@__DIR__, "..", "out", "ppc")
+pvals = readdlm(joinpath(results_dir, file_prefix*"-pvals.txt")); pvals = reshape(pvals, nitr, length(ρs), length(σs))
+aucs = readdlm(joinpath(results_dir, file_prefix*"-aucs.txt")); aucs = reshape(aucs, nitr, length(ρs), length(σs))
+auc3s = readdlm(joinpath(results_dir, file_prefix*"-auc3s.txt")); auc3s = reshape(auc3s, nitr, length(ρs), length(σs))
+F1s = readdlm(joinpath(results_dir, file_prefix*"-F1s.txt")); F1s = reshape(F1s, 3, nlevels, nitr, length(ρs), length(σs))
 
 # figure set-up
 pt = 4 ÷ 3; inch = 96
@@ -42,14 +43,14 @@ Colorbar(fig[1,3], size=8, limits=(lowclip, 1.0), scale=log10, colormap=cmr_embe
 nlevels = 3
 nitr = 100
 lowclip = 0.01
-file_prefix = "ppc-traj-fd"
+file_prefix = "traj-fd"
 xlabel = "I.C. scale"
 
 # read in data
-pvals = readdlm("out/ppc/"*file_prefix*"-pvals.txt"); pvals = reshape(pvals, nitr, length(ρs), length(σs))
-aucs = readdlm("out/ppc/"*file_prefix*"-aucs.txt"); aucs = reshape(aucs, nitr, length(ρs), length(σs))
-auc3s = readdlm("out/ppc/"*file_prefix*"-auc3s.txt"); auc3s = reshape(auc3s, nitr, length(ρs), length(σs))
-F1s = readdlm("out/ppc/"*file_prefix*"-F1s.txt"); F1s = reshape(F1s, 3, nlevels, nitr, length(ρs), length(σs))
+pvals = readdlm(joinpath(results_dir, file_prefix*"-pvals.txt")); pvals = reshape(pvals, nitr, length(ρs), length(σs))
+aucs = readdlm(joinpath(results_dir, file_prefix*"-aucs.txt")); aucs = reshape(aucs, nitr, length(ρs), length(σs))
+auc3s = readdlm(joinpath(results_dir, file_prefix*"-auc3s.txt")); auc3s = reshape(auc3s, nitr, length(ρs), length(σs))
+F1s = readdlm(joinpath(results_dir, file_prefix*"-F1s.txt")); F1s = reshape(F1s, 3, nlevels, nitr, length(ρs), length(σs))
 
 jittered_ρ_logscale = log10.(repeat(ρs, inner=nitr)) .+ randn(length(ρs)*nitr).*0.015
 jittered_ρ = 10 .^ jittered_ρ_logscale
@@ -87,5 +88,5 @@ colgap!(fig.layout, 2, 8)
 rowgap!(fig.layout, 10)
 
 # resize_to_layout!(fig)
-save("figs/ppc-F1s.png", fig, dpi=500)
+save(joinpath(@__DIR__, "..", "figs", "ppc-F1s.png"), fig, dpi=500)
 display(fig)

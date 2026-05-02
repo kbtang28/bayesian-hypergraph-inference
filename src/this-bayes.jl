@@ -1,79 +1,37 @@
 using SparseBayes
-include("this-tools.jl")
 
-function this_bayes(X::Matrix{Float64}, Y::Matrix{Float64}, ooi::Vector{<:Integer}, dmax::Int64; opts=SBOpts(nitr=500, free_basis=[1]), settings=SBSettings(), ctrls=SBCtrlSettings(beta_update_frequency=3))
-    T, n = size(X)
+"""
+    this_bayes(X, Y, ooi, dmax; opts, settings, ctrls) -> (Ainf, coeff, out, diagnostics)
+
+Infer higher-order interactions via sparse Bayesian regression (SparseBayes).
+
+- `X`: state time series (T × n); rows = time steps, columns = agents
+- `Y`: derivative time series (T × n)
+- `ooi`: orders of interaction to reconstruct (e.g. `[2, 3]`)
+- `dmax`: maximum monomial degree (typically `maximum(ooi) - 1`)
+
+Returns the inferred adjacency dictionary `Ainf` (keyed by interaction order), 
+the full coefficient matrix `coeff`, the full `SBOut` object, and solver diagnostics.
+"""
+function this_bayes(X::Matrix{Float64}, Y::Matrix{Float64}, 
+                    ooi::Vector{<:Integer}, dmax::Int64; 
+                    opts=SBOpts(nitr=500, free_basis=[1]), 
+                    settings=SBSettings(), 
+                    ctrls=SBCtrlSettings(beta_update_frequency=3))
 
     if size(X) != size(Y)
         @info "Dimensions of states and derivatives do not match."
         return nothing
     end
 
-    # retrieve values of monomials at each time step
-    θ, d = get_θd(X, dmax)
+    # build monomial library
+    θ = get_θ(X, dmax)
 
-    # run sparse Bayes
+    # run sparse Bayesian regression
     out, diagnostics = sparse_bayes(θ, Y; opts=opts, settings=settings, ctrls=ctrls)
-
-    # # calculate relative error
-    # err = norm(Y - θ*out.value, 1)
-    # relerr = err/norm(Y, 1)
 
     # reconstruct adjacency tensors
     Ainf = get_Ainf(out.value, ooi, dmax)
 
     return Ainf, out.value, out, diagnostics
-end
-
-function this_bayes_whitened(X::Matrix{Float64}, Y::Matrix{Float64}, F, ooi::Vector{<:Integer}, dmax::Int64; verbosity=2)
-    T, n = size(X)
-
-    if size(X) != size(Y)
-        @info "Dimensions of states and derivatives do not match."
-        return nothing
-    end
-
-    # retrieve values of monomials at each time step
-    θ, d = get_θd(X, dmax)
-
-    idx_mon = Dict{Int64, Vector{Int64}}() # (monomial index) => (nodes involved in monomial)
-    for i in 1:size(d)[1]
-		mon = d[i,:][d[i,:] .!= 0]
-		if length(mon) == length(union(mon)) # skips monomials with repeated factors, e.g., xᵢxⱼ²
-			idx_mon[i] = sort(mon)
-		end
-	end
-
-    # whiten
-    θw = F.L \ θ
-    Yw = F.L \ Y
-    
-    # run sparse Bayes
-    opts = SBOpts(verbosity=verbosity, nitr=1000, free_basis=[1], fixed_noise=true)
-    settings = SBSettings(beta=1.0)
-    out, diagnostics = sparse_bayes(θw, Yw; opts=opts, settings=settings)
-
-    # # calculate relative error
-    # err = norm(Yw - θw*out.value, 1)
-    # relerr = err/norm(Yw, 1)
-
-    # reconstruct adjacency tensors
-    Ainf = Dict{Int64,Matrix{Float64}}(o => zeros(0,o+1) for o in vcat(1, ooi))
-
-    idx_coeff = Dict{Int64,Vector{Int64}}() # (monomial index) => (nodes for which monomial coeff is nonzero)
-    for id in keys(idx_mon)
-		aaa = setdiff((1:n)[abs.(out.value[id, :]) .> 1e-8],idx_mon[id]) # ensures monomial involving xᵢ does not get inferred for xᵢ
-		if !isempty(aaa)
-			idx_coeff[id] = aaa
-		end
-	end
-
-	for id in keys(idx_coeff)
-		ii = idx_coeff[id]
-		jj = idx_mon[id]
-		o = length(jj)+1
-		Ainf[o] = vcat(Ainf[o], [ii repeat(jj', length(ii), 1) out.value[id,ii]]) # last col is inferred coeffs
-	end
-
-    return Ainf, coeff, out, diagnostics
 end

@@ -10,7 +10,7 @@ n_itr = 300
 λs = [round.([d * 10. ^ exp for exp in [-2, -1] for d in 1:9]; digits=2); 1.0]
 
 # read in and package results
-results_dir = "out/robustness/"
+results_dir = joinpath(@__DIR__, "..", "out", "robustness")
 date = "2026-03-02"
 
 # bayes_aurocs = zeros(Float64, 3, n_itr, length(N_array), length(σ_array))
@@ -146,5 +146,5 @@ text!(axs[3,3], 590, 0.1, text="(h)", font=:bold, align=(:right, :bottom))
 text!(axs[4,2], 590, 0.1, text="(i)", font=:bold, align=(:right, :bottom))
 text!(axs[4,3], 590, 0.1, text="(j)", font=:bold, align=(:right, :bottom))
 
-save("figs/compare-robustness-sweeps.png", fig, dpi=300)
+save(joinpath(@__DIR__, "..", "figs", "compare-robustness-sweeps.png"), fig, dpi=300)
 fig

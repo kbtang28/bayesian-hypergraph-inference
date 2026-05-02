@@ -1,11 +1,11 @@
+include(joinpath(@__DIR__, "..", "src", "BayesTHIS.jl"))
+using .BayesTHIS
 using DelimitedFiles, CairoMakie
 import Statistics: mean, median, quantile
 import ColorSchemes: cmr_ember, cmr_prinsenvlag
 bblue = "#4D8DDE"
 torange = "#CD6825"
 tyellow = "#DAA71C"
-
-include("this-tools.jl")
 
 λs = [0.01, 0.05, 0.1, 0.5, 1.0, 2.0]
 c = 2.0
@@ -14,8 +14,8 @@ n_itr = 100
 M = 66
 n = 10
 
-results_dir = "out/near-sync/"
-timestamp = "2026-04-13"
+results_dir = joinpath(@__DIR__, "..", "out", "near-sync")
+timestamp = "2026-05-02"
 kappas = readdlm(joinpath(results_dir, "kappas-$(timestamp).txt"))
 bayes_aurocs = readdlm(joinpath(results_dir, "bayes-aurocs-$(timestamp).txt"))
 this_aurocs = readdlm(joinpath(results_dir, "this-aurocs-$(timestamp).txt"))
@@ -108,5 +108,5 @@ text!(ax12, 0.03, 0.95, text="(c)", space=:relative, font=:bold, align=(:left, :
 text!(ax21, 0.03, 0.95, text="(d)", space=:relative, font=:bold, align=(:left, :top))
 text!(ax22, 0.03, 0.95, text="(e)", space=:relative, font=:bold, align=(:left, :top))
 
-save("figs/robustness-near-sync.png", fig, dpi=300)
+save(joinpath(@__DIR__, "..", "figs", "robustness-near-sync.png"), fig, dpi=300)
 fig

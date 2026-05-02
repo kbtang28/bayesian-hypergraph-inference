@@ -5,22 +5,15 @@ addprocs(max(num_procs-1, 0), topology=:master_worker)
 
 # activate environment
 @everywhere begin
-    import Pkg
-    Pkg.activate(@__DIR__)
-    Pkg.instantiate()
+    import Pkg; Pkg.activate(joinpath(@__DIR__, ".."))
 end
 
 # load dependencies...
 @everywhere begin
+    include(joinpath(@__DIR__, "..", "BayesTHIS.jl"))
+    using .BayesTHIS
+    using Dates
     import StatsBase: std
-
-    include("gen-rand-hyperg.jl")
-    include("hyperg-kuramoto.jl")
-    include("this-bayes.jl")
-    include("performance-measures.jl")
-    include("sample-posterior.jl")
-    include("multiorder-laplacian.jl")
-    include("structure-utils.jl")
 end
 
 Random.seed!(271828)
@@ -39,65 +32,6 @@ end
 
 # worker-side utility functions
 @everywhere begin
-    function F1s_filter_by_CI(out, D, coeff, level, A2l, A3l; extra_out=false)
-        _, n = size(coeff)
-
-        sig = significant_coeff(out, D, level)
-        Ainf = get_Ainf(coeff .* sig, [2,3], 2)
-        
-        F1s = zeros(Float64, 3)
-
-        if extra_out
-            pres = zeros(Float64, 3)
-            recs = zeros(Float64, 3)
-
-            a,  b,  c  = my_F1(abs.(Ainf[2]), A2l, abs.(Ainf[3]), A3l, n; extra_out=true)
-            a2, b2, c2 = my_F1(abs.(Ainf[2]), A2l, n; extra_out=true)
-            a3, b3, c3 = my_F1(abs.(Ainf[3]), A3l, n; extra_out=true)
-
-            F1s[1]  = a; F1s[2]  = a2; F1s[3]  = a3
-            pres[1] = b; pres[2] = b2; pres[3] = b3
-            recs[1] = c; recs[2] = c2; recs[3] = c3
-            return F1s, pres, recs
-        else
-            F1s[1] = my_F1(abs.(Ainf[2]), A2l, abs.(Ainf[3]), A3l, n)
-            F1s[2] = my_F1(abs.(Ainf[2]), A2l, n)
-            F1s[3] = my_F1(abs.(Ainf[3]), A3l, n)
-            return F1s
-        end
-        
-    end
-
-    function _get_aurocs(Ainf, n, A2l, A3l)
-        aurocs = zeros(Float64, 3)
-
-        tpr, fpr = my_ROC(abs.(Ainf[2]), A2l, abs.(Ainf[3]), A3l, n; verbosity=0)
-        aurocs[1] = get_auc(tpr, fpr)
-
-        tpr2, fpr2 = my_ROC(abs.(Ainf[2]), A2l, n)
-        aurocs[2] = get_auc(tpr2, fpr2)
-
-        tpr3, fpr3 = my_ROC(abs.(Ainf[3]), A3l, n)
-        aurocs[3] = get_auc(tpr3, fpr3)
-
-        return aurocs
-    end
-
-    function _get_auprcs(Ainf, n, A2l, A3l)
-        auprcs = zeros(Float64, 3)
-
-        prec, rec = my_PRC(abs.(Ainf[2]), A2l, abs.(Ainf[3]), A3l, n; verbosity=0)
-        auprcs[1] = get_auc(prec, rec, rule="T")
-
-        prec2, rec2 = my_PRC(abs.(Ainf[2]), A2l, n)
-        auprcs[2] = get_auc(prec2, rec2, rule="T")
-
-        prec3, rec3 = my_PRC(abs.(Ainf[3]), A3l, n)
-        auprcs[3] = get_auc(prec3, rec3, rule="T")
-
-        return auprcs
-    end
-
     function test_inference(X, A2, A3, A2l, A3l, pw_coeff, tri_coeff, n_swap, alphas; n = n_const)
         # to store results
         F1s    = zeros(Float64, 3, length(alphas))
@@ -105,7 +39,6 @@ end
         recs   = zeros(Float64, 3, length(alphas))
         aurocs = zeros(Float64, 3, length(alphas))
         auprcs = zeros(Float64, 3, length(alphas))
-        lyaps  = zeros(Float64, n, length(alphas))
         betas  = zeros(Float64, n, length(alphas))
 
         # swap nodes
@@ -133,26 +66,23 @@ end
 
             # measure quality of inference
             D = get_theta(X, dmax)
-            A, B, C = F1s_filter_by_CI(out, D, coeff, 0.9545, A2l, sA3l; extra_out=true)
+            A, B, C = F1s_filter_by_CI(out, D, coeff, A2l, sA3l, 0.9545; extra_out=true)
             F1s[:, j]    .= A
             pres[:, j]   .= B
             recs[:, j]   .= C
-            aurocs[:, j] .= _get_aurocs(Ainf, n, A2l, sA3l)
-            auprcs[:, j] .= _get_auprcs(Ainf, n, A2l, sA3l)
-
-            # record Lyapunov exponents of multiorder Laplacian
-            weights = Dict(2 => 1.0, 3 => alpha)
-            lyaps[:, j] .= compute_lyap_multi(Es, n, weights)
+            aurocs[:, j] .= get_aurocs(Ainf, n, A2l, sA3l)
+            auprcs[:, j] .= get_auprcs(Ainf, n, A2l, sA3l)
 
             # record inferred inverse noise variance
             betas[:, j] .= out.beta
         end
 
-        return F1s, pres, recs, aurocs, auprcs, lyaps, betas, degree_corr(A2, sA3), degree_hetero_ratio(A2, sA3)
+        return F1s, pres, recs, aurocs, auprcs, betas, degree_corr(A2, sA3), degree_hetero_ratio(A2, sA3)
     end
 end
 
 # ----------- RUN EXPERIMENT -----------
+timestamp = Dates.format(now(), "yyyy-mm-dd")
 
 # allocate space for results
 F1s    = zeros(Float64, (3, n_graphs, length(n_swaps), length(alphas)))
@@ -160,7 +90,6 @@ pres   = zeros(Float64, (3, n_graphs, length(n_swaps), length(alphas)))
 recs   = zeros(Float64, (3, n_graphs, length(n_swaps), length(alphas)))
 aurocs = zeros(Float64, (3, n_graphs, length(n_swaps), length(alphas)))
 auprcs = zeros(Float64, (3, n_graphs, length(n_swaps), length(alphas)))
-lyaps  = zeros(Float64, (n, n_graphs, length(n_swaps), length(alphas)))
 betas  = zeros(Float64, (n, n_graphs, length(n_swaps), length(alphas)))
 
 deg_corr = zeros(Float64, n_graphs, length(n_swaps))
@@ -192,21 +121,20 @@ for i in 1:n_graphs
         recs[:, i, j, :]    .= results[j][3]
         aurocs[:, i, j, :]  .= results[j][4]
         auprcs[:, i, j, :]  .= results[j][5]
-        lyaps[:, i, j, :]   .= results[j][6]
-        betas[:, i, j, :]   .= results[j][7]
-        deg_corr[i, j]       = results[j][8]
-        deg_hetr[i, j]       = results[j][9]
+        betas[:, i, j, :]   .= results[j][6]
+        deg_corr[i, j]       = results[j][7]
+        deg_hetr[i, j]       = results[j][8]
     end
 end
 
-writedlm("out/node-swap/node-swap-F1s-fixed-noise.txt", F1s)
-writedlm("out/node-swap/node-swap-pres-fixed-noise.txt", pres)
-writedlm("out/node-swap/node-swap-recs-fixed-noise.txt", recs)
-writedlm("out/node-swap/node-swap-aurocs-fixed-noise.txt", aurocs)
-writedlm("out/node-swap/node-swap-auprcs-fixed-noise.txt", auprcs)
-writedlm("out/node-swap/node-swap-lyaps-fixed-noise.txt", lyaps)
-writedlm("out/node-swap/node-swap-betas-fixed-noise.txt", betas)
-writedlm("out/node-swap/node-swap-deg-corr-fixed-noise.txt", deg_corr)
-writedlm("out/node-swap/node-swap-deg-hetr-fixed-noise.txt", deg_hetr)
+out_dir = joinpath(@__DIR__, "..", "out", "node-swap")
+writedlm(joinpath(out_dir, "F1s-fixed-noise-$(timestamp).txt"), F1s)
+writedlm(joinpath(out_dir, "pres-fixed-noise-$(timestamp).txt"), pres)
+writedlm(joinpath(out_dir, "recs-fixed-noise-$(timestamp).txt"), recs)
+writedlm(joinpath(out_dir, "aurocs-fixed-noise-$(timestamp).txt"), aurocs)
+writedlm(joinpath(out_dir, "auprcs-fixed-noise-$(timestamp).txt"), auprcs)
+writedlm(joinpath(out_dir, "betas-fixed-noise-$(timestamp).txt"), betas)
+writedlm(joinpath(out_dir, "deg-corr-fixed-noise-$(timestamp).txt"), deg_corr)
+writedlm(joinpath(out_dir, "deg-hetr-fixed-noise-$(timestamp).txt"), deg_hetr)
 
 rmprocs(workers())

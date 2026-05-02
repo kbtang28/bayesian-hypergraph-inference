@@ -10,7 +10,7 @@ n_array = [7, 10, 15, 20, 30]
 n_itr = 50
 
 # read in and package results
-results_dir = "out/num-nodes/"
+results_dir = joinpath(@__DIR__, "..", "out", "num-nodes")
 date = "2026-04-21"
 
 # bayes_aurocs = zeros(Float64, 3, n_itr, length(ρ_array), length(n_array))
@@ -130,5 +130,5 @@ text!(axs[3,1], 0.76, 0.95, text="(d)", space=:relative, font=:bold, align=(:lef
 text!(axs[3,2], 0.76, 0.95, text="(e)", space=:relative, font=:bold, align=(:left, :top))
 text!(axs[4,2], 0.76, 0.95, text="(f)", space=:relative, font=:bold, align=(:left, :top))
 
-save("figs/compare-robustness-num-nodes.png", fig, dpi=300)
+save(joinpath(@__DIR__, "..", "figs", "compare-robustness-num-nodes.png"), fig, dpi=300)
 fig

@@ -5,20 +5,14 @@ addprocs(max(num_procs-1, 0), topology=:master_worker)
 
 # activate environment
 @everywhere begin
-    import Pkg
-    Pkg.activate(@__DIR__)
-    Pkg.instantiate()
+    import Pkg; Pkg.activate(joinpath(@__DIR__, ".."))
 end
 
 # load dependencies...
 @everywhere begin
+    include(joinpath(@__DIR__, "..", "BayesTHIS.jl"))
+    using .BayesTHIS
     using Random, Printf, SparseBayes, LinearAlgebra, Dates, DelimitedFiles, Distributions, ProgressMeter
-
-    include("gen-rand-hyperg.jl")
-    include("hyperg-kuramoto.jl")
-    include("this-bayes.jl")
-    include("sample-posterior.jl")
-    include("performance-measures.jl")
 end
 
 Random.seed!(1234)
@@ -48,25 +42,7 @@ end
 
 # worker-side utility functions
 @everywhere begin
-    function F1_filter_by_CI(out, D, coeff, levels; A2l = A2l_const, A3l = A3l_const)
-        _, n = size(coeff)
-
-        F1s = zeros(Float64, 3, length(levels))
-
-        for (i, level) in enumerate(levels)
-            # filter out coeffs with 0 in (level)% CI for conditional posterior
-            sig = significant_coeff(out, D, level)
-            Ainf = get_Ainf(coeff .* sig, [2,3], 2)
-
-            # compute F1 scores
-            F1s[1, i] = my_F1(abs.(Ainf[2]), A2l, abs.(Ainf[3]), A3l, n)
-            F1s[2, i] = my_F1(abs.(Ainf[2]), A2l, n)
-            F1s[3, i] = my_F1(abs.(Ainf[3]), A3l, n)
-        end
-
-        return F1s
-    end
-
+    # partitions D into pairwise and triadic columns
     function partition_D(D, d, i)
         tri_cols = [(length(unique(r)) == 2) & (!in(r)(0)) & (!in(r)(i)) for r in eachrow(d)]
         # tri_cols = [(!in(r)(0)) for r in eachrow(d)]
@@ -77,8 +53,8 @@ end
         return D1, D2
     end
 
+    # projects X onto the colspace of D2 after orthogonalizing wrt D1
     function project_colD2orth(D1, D2, X)
-        # projects X onto the colspace of D2 after orthogonalizing wrt D1
         
         # orthogonal basis for col(D1)
         QD1 = Matrix(qr(D1).Q)
@@ -104,9 +80,13 @@ end
         Θ = get_theta(X, 2); # full design matrix
         pw_Θ = get_theta(X, 1); # pairwise monomials only
 
-        # inference settings
+        # inference settings for pairwise model
         opts = SBOpts(verbosity=0, nitr=1000, free_basis=[1], fixed_noise=true)
         settings = SBSettings(beta=1/(σ^2))
+
+        # inference settings for full model
+        full_opts = SBOpts(verbosity=0, nitr=1000, free_basis=[1])
+        ctrls = SBCtrlSettings(beta_update_frequency=3)
 
         # repeat inference for different noise realizations
         pval = Vector{Float64}(undef, nitr)
@@ -142,8 +122,6 @@ end
             pval[itr] = sum( T_rep .> T_obs ) / K
 
             # measure quality of inference - full model
-            full_opts = SBOpts(verbosity=0, nitr=1000, free_basis=[1])
-            ctrls = SBCtrlSettings(beta_update_frequency=3)
             Ainf, coeff, tri_out, _ = this_bayes(X, Y, [2,3], 2; opts=full_opts, ctrls=ctrls)
             
             tpr, fpr = my_ROC(abs.(Ainf[2]), A2l, abs.(Ainf[3]), A3l, n)
@@ -152,7 +130,7 @@ end
             pre, rec = my_PRC(abs.(Ainf[3]), A3l, n)
             auc3[itr] = get_auc(pre, rec)
 
-            F1[:, :, itr] = F1_filter_by_CI(tri_out, Θ, coeff, levels)
+            F1[:, :, itr] = F1_filter_by_CI(tri_out, Θ, coeff, A2l, A3l, levels)
         end
 
         return pval, auc, auc3, F1
@@ -160,6 +138,7 @@ end
 end
 
 # ----------- RUN EXPERIMENT -----------
+timestamp = Dates.format(now(), "yyyy-mm-dd")
 
 # allocate space for results
 
@@ -181,9 +160,10 @@ for (k, σ) in enumerate(σs)
     end
 end
 
-writedlm("out/ppc/ppc-scatter-pvals.txt", pvals)
-writedlm("out/ppc/ppc-scatter-aucs.txt", aucs)
-writedlm("out/ppc/ppc-scatter-auc3s.txt", auc3s)
-writedlm("out/ppc/ppc-scatter-F1s.txt", F1s)
+out_dir = joinpath(@__DIR__, "..", "out", "ppc")
+writedlm(joinpath(out_dir, "scatter-pvals-$(timestamp).txt"), pvals)
+writedlm(joinpath(out_dir, "scatter-aucs-$(timestamp).txt"), aucs)
+writedlm(joinpath(out_dir, "scatter-auc3s-$(timestamp).txt"), auc3s)
+writedlm(joinpath(out_dir, "scatter-F1s-$(timestamp).txt"), F1s)
 
 rmprocs(workers())

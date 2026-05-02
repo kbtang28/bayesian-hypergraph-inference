@@ -18,15 +18,14 @@ alpha_palette = ColorScheme([GnBu_9[i] for i in 4:8])
 bb = get(cmr_prinsenvlag, 0.88)
 
 # read in data from node swap experiment
-F1s = readdlm("out/node-swap/node-swap-F1s-fixed-noise.txt"); F1s = reshape(F1s, (3, n_graphs, length(n_swaps), length(alphas)))
-pres = readdlm("out/node-swap/node-swap-pres-fixed-noise.txt"); pres = reshape(pres, (3, n_graphs, length(n_swaps), length(alphas)))
-recs = readdlm("out/node-swap/node-swap-recs-fixed-noise.txt"); recs = reshape(recs, (3, n_graphs, length(n_swaps), length(alphas)))
-auprcs = readdlm("out/node-swap/node-swap-auprcs-fixed-noise.txt"); auprcs = reshape(auprcs, (3, n_graphs, length(n_swaps), length(alphas)))
-aurocs = readdlm("out/node-swap/node-swap-aurocs-fixed-noise.txt"); aurocs = reshape(aurocs, (3, n_graphs, length(n_swaps), length(alphas)))
-lyaps = readdlm("out/node-swap/node-swap-lyaps-fixed-noise.txt"); lyaps = reshape(lyaps, (n, n_graphs, length(n_swaps), length(alphas)))
-lyap2 = lyaps[2, :, :, :];
-betas = readdlm("out/node-swap/node-swap-betas-fixed-noise.txt"); betas = reshape(betas, (n, n_graphs, length(n_swaps), length(alphas)))
-deg_corr = readdlm("out/node-swap/node-swap-deg-corr-fixed-noise.txt"); deg_corr = reshape(deg_corr, n_graphs, length(n_swaps))
+results_dir = joinpath(@__DIR__, "..", "out", "node-swap")
+F1s = readdlm("F1s-fixed-noise.txt"); F1s = reshape(F1s, (3, n_graphs, length(n_swaps), length(alphas)))
+pres = readdlm("pres-fixed-noise.txt"); pres = reshape(pres, (3, n_graphs, length(n_swaps), length(alphas)))
+recs = readdlm("recs-fixed-noise.txt"); recs = reshape(recs, (3, n_graphs, length(n_swaps), length(alphas)))
+auprcs = readdlm("auprcs-fixed-noise.txt"); auprcs = reshape(auprcs, (3, n_graphs, length(n_swaps), length(alphas)))
+aurocs = readdlm("aurocs-fixed-noise.txt"); aurocs = reshape(aurocs, (3, n_graphs, length(n_swaps), length(alphas)))
+betas = readdlm("betas-fixed-noise.txt"); betas = reshape(betas, (n, n_graphs, length(n_swaps), length(alphas)))
+deg_corr = readdlm("deg-corr-fixed-noise.txt"); deg_corr = reshape(deg_corr, n_graphs, length(n_swaps))
 
 avg_auprcs = mean(auprcs, dims=2)[:, 1, :, :]
 avg_aurocs = mean(aurocs, dims=2)[:, 1, :, :]
@@ -68,5 +67,5 @@ rowgap!(fig.layout, 1, 10.0)
 colgap!(fig.layout, 1, 5.0)
 Label(fig[3,1], "⟵ Increasing num. node swaps", valign=:top, padding=(0,0,-10,-10))
 
-save("figs/pairwise-inference-vs-codc.png", fig, dpi=300)
+save(joinpath(@__DIR__, "..", "figs", "pairwise-inference-vs-codc.png"), fig, dpi=300)
 fig

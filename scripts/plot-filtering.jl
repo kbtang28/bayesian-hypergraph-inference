@@ -6,7 +6,7 @@ psblues = get(cmr_prinsenvlag, range(0.7, 0.9, 3))
 psoranges = get(cmr_prinsenvlag, range(0.0, 0.3, 6))[end:-1:1]
 
 # settings from experiment
-εs = round.([d * 10. ^ exp for exp in -2:0 for d in 1:9]; digits=2)
+τs = round.([d * 10. ^ exp for exp in -2:0 for d in 1:9]; digits=2)
 levels = [cdf(Normal(), σ) - cdf(Normal(), -σ) for σ in [1.0, 2.0, 3.0]]
 experiment_settings = [(40:2:400, 0.1), (40:5:500, 0.5)]
 n_itr = 300
@@ -23,19 +23,20 @@ axs[1,2].title = "Triadic"
 axs[2,1].xlabel = "N"
 axs[2,2].xlabel = "N"
 
-εs_to_plot = [0.01, 0.05, 0.1, 0.5, 1.0, 2.0]
+τs_to_plot = [0.01, 0.05, 0.1, 0.5, 1.0, 2.0]
 
 # low noise settings
 N_array, σ = experiment_settings[1]
 xlims!(axs[1,1], N_array[1], N_array[end])
 xlims!(axs[1,2], N_array[1], N_array[end])
 
-F1s_coeff_mags = readdlm("out/filtering/coeff-mags-$(σ)-F1s.txt"); F1s_coeff_mags = reshape(F1s_coeff_mags, 3, length(εs), n_itr, length(N_array))
-F1s_coeff_CIs = readdlm("out/filtering/coeff-CIs-$(σ)-F1s.txt"); F1s_coeff_CIs = reshape(F1s_coeff_CIs, 3, length(levels), n_itr, length(N_array))
+results_dir = joinpath(@__DIR__, "..", "out", "filtering")
+F1s_coeff_mags = readdlm(joinpath(results_dir, "coeff-mags-$(σ)-F1s.txt")); F1s_coeff_mags = reshape(F1s_coeff_mags, 3, length(τs), n_itr, length(N_array))
+F1s_coeff_CIs = readdlm(joinpath(results_dir, "coeff-CIs-$(σ)-F1s.txt")); F1s_coeff_CIs = reshape(F1s_coeff_CIs, 3, length(levels), n_itr, length(N_array))
 
 for (col, i) in enumerate([1,3])
-    for (l, ε) in enumerate(εs_to_plot)
-        j = findfirst(εs .== ε)
+    for (l, τ) in enumerate(τs_to_plot)
+        j = findfirst(τs .== τ)
         mean_F1 = vec(mean(F1s_coeff_mags[i, j, :, :], dims=1))
         lines!(axs[1, col], N_array, mean_F1, color=psoranges[l], linewidth=1.5, linestyle=(:dash, :dense))
     end
@@ -52,12 +53,12 @@ N_array, σ = experiment_settings[2]
 xlims!(axs[2,1], N_array[1], N_array[end])
 xlims!(axs[2,2], N_array[1], N_array[end])
 
-F1s_coeff_mags = readdlm("out/filtering/coeff-mags-$(σ)-F1s.txt"); F1s_coeff_mags = reshape(F1s_coeff_mags, 3, length(εs), n_itr, length(N_array))
-F1s_coeff_CIs = readdlm("out/filtering/coeff-CIs-$(σ)-F1s.txt"); F1s_coeff_CIs = reshape(F1s_coeff_CIs, 3, length(levels), n_itr, length(N_array))
+F1s_coeff_mags = readdlm(joinpath(results_dir, "coeff-mags-$(σ)-F1s.txt")); F1s_coeff_mags = reshape(F1s_coeff_mags, 3, length(τs), n_itr, length(N_array))
+F1s_coeff_CIs = readdlm(joinpath(results_dir, "coeff-CIs-$(σ)-F1s.txt")); F1s_coeff_CIs = reshape(F1s_coeff_CIs, 3, length(levels), n_itr, length(N_array))
 
 for (col, i) in enumerate([1,3])
-    for (l, ε) in enumerate(εs_to_plot)
-        j = findfirst(εs .== ε)
+    for (l, τ) in enumerate(τs_to_plot)
+        j = findfirst(τs .== τ)
         mean_F1 = vec(mean(F1s_coeff_mags[i, j, :, :], dims=1))
         lines!(axs[2, col], N_array, mean_F1, color=psoranges[l], linewidth=1.5, linestyle=(:dash, :dense))
     end
@@ -79,7 +80,7 @@ Label(fig[2, 0], "High noise", font=:bold, rotation=pi/2, tellheight=false)
 
 # Legend(fig[3, 1:2], [grad_dash, grad_line], ["coefficient magnitude", "conditional posterior CI"], orientation=:horizontal, tellwidth=false, tellheight=false, padding=(5.0, 5.0, 0.0, 0.0))
 
-Colorbar(fig[3,1], size=8, label = "Coefficient magnitude τ", colormap=cgrad(psoranges, 6, categorical=true), vertical=false, ticks=(range(1/12, 11/12, 6), string.(εs_to_plot)), flipaxis=false)
+Colorbar(fig[3,1], size=8, label = "Coefficient magnitude τ", colormap=cgrad(psoranges, 6, categorical=true), vertical=false, ticks=(range(1/12, 11/12, 6), string.(τs_to_plot)), flipaxis=false)
 Colorbar(fig[3,2], size=8, label = "γ-credible interval", colormap=cgrad(psblues, 3, categorical=true), vertical=false, ticks=(range(1/6, 5/6, 3), string.(round.(levels, digits=3))), flipaxis=false)
 
 text!(axs[1,1], 0.035, 0.9, text="(a)", font=:bold, align=(:center, :center), space=:relative)
@@ -92,5 +93,5 @@ colsize!(fig.layout, 1, Aspect(1, 4.0))
 colsize!(fig.layout, 2, Aspect(1, 4.0))
 rowgap!(fig.layout, 2, 6.0)
 resize_to_layout!(fig)
-save("figs/compare-filtering.png", fig)
+save(joinpath(@__DIR__, "..", "figs", "compare-filtering.png"), fig)
 display(fig)

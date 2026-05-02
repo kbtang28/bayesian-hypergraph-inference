@@ -15,7 +15,7 @@ n_itr = 80
 λs = [0.01, 0.05, 0.1, 0.5, 1.0]
 
 # read in results
-results_dir = "out/sparsity/"
+results_dir = joinpath(@__DIR__, "..", "out", "sparsity")
 timestamp = "2026-04-26"
 
 bayes_aurocs = readdlm(joinpath(results_dir, "bayes-aurocs-$(timestamp)-sparsity-2.txt"))
@@ -106,5 +106,5 @@ text!(axs[3,1], 0.77, 0.95, text="(d)", space=:relative, font=:bold, align=(:lef
 text!(axs[3,2], 0.77, 0.95, text="(e)", space=:relative, font=:bold, align=(:left, :top))
 text!(axs[4,2], 0.77, 0.95, text="(f)", space=:relative, font=:bold, align=(:left, :top))
 
-# save("figs/compare-robustness-sparsity.png", fig, dpi=300)
+save(joinpath(@__DIR__, "..", "figs", "compare-robustness-sparsity.png"), fig, dpi=300)
 fig

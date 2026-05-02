@@ -5,36 +5,31 @@ addprocs(max(num_procs-1, 0), topology=:master_worker)
 
 # activate environment
 @everywhere begin
-    import Pkg
-    Pkg.activate(@__DIR__)
-    Pkg.instantiate()
+    import Pkg; Pkg.activate(joinpath(@__DIR__, ".."))
 end
 
 # load dependencies
 @everywhere begin
+    include(joinpath(@__DIR__, "..", "BayesTHIS.jl"))
+    using .BayesTHIS
     using Random, Printf, SparseBayes, Dates, DelimitedFiles, Distributions, ProgressMeter
-
-    include("gen-rand-hyperg.jl")
-    include("hyperg-kuramoto.jl")
-    include("this-bayes.jl")
-    include("sample-posterior.jl")
-    include("performance-measures.jl")
 end
 
 # experiment & model parameters (master)
 n = 10
 
-A2 = readdlm("hyperg-models/toy-hyperg-n10v2-A2.txt")
-A2l = readdlm("hyperg-models/toy-hyperg-n10v2-A2l.txt")
-A3 = readdlm("hyperg-models/toy-hyperg-n10v2-A3.txt"); A3 = reshape(A3, n, n, n)
-A3l = readdlm("hyperg-models/toy-hyperg-n10v2-A3l.txt")
+hyperg_models_dir = joinpath(@__DIR__, "..", "hyperg-models")
+A2 = readdlm(joinpath(hyperg_models, "toy-hyperg-n10v2-A2.txt"))
+A2l = readdlm(joinpath(hyperg_models, "toy-hyperg-n10v2-A2l.txt"))
+A3 = readdlm(joinpath(hyperg_models, "toy-hyperg-n10v2-A3.txt")); A3 = reshape(A3, n, n, n)
+A3l = readdlm(joinpath(hyperg_models, "toy-hyperg-n10v2-A3l.txt"))
 
 p = (A2, A3, zeros(n), π/4, π/4)
 
 ooi = [2,3]
 dmax = 2
 
-εs = round.([d * 10. ^ exp for exp in -2:0 for d in 1:9]; digits=2)
+τs = round.([d * 10. ^ exp for exp in -2:0 for d in 1:9]; digits=2)
 levels = [cdf(Normal(), σ) - cdf(Normal(), -σ) for σ in [1.0, 2.0, 3.0]]
 experiment_settings = [(40:2:400, 0.1), (40:5:500, 0.5)]
 n_itr = 300
@@ -51,53 +46,15 @@ N_array, σ = experiment_settings[array_id]
     const p_const      = $p
     const ooi_const    = $ooi
     const dmax_const   = $dmax
-    const εs_const     = $εs
+    const τs_const     = $τs
     const levels_const = $levels
 end
 
-# worker-side utility functions
+# worker-side utility function
 @everywhere begin
-    function F1_filter_by_CI(out, D, coeff, levels; A2l = A2l_const, A3l = A3l_const)
-        _, n = size(coeff)
-
-        F1s = zeros(Float64, 3, length(levels))
-
-        for (i, level) in enumerate(levels)
-            # filter out coeffs with 0 in (level)% CI for conditional posterior
-            sig = significant_coeff(out, D, level)
-            Ainf = get_Ainf(coeff .* sig, [2,3], 2)
-
-            # compute F1 scores
-            F1s[1, i] = my_F1(abs.(Ainf[2]), A2l, abs.(Ainf[3]), A3l, n)
-            F1s[2, i] = my_F1(abs.(Ainf[2]), A2l, n)
-            F1s[3, i] = my_F1(abs.(Ainf[3]), A3l, n)
-        end
-
-        return F1s
-    end
-
-    function F1_filter_by_coeff_mag(coeff, εs; A2l = A2l_const, A3l = A3l_const)
-        _, n = size(coeff)
-
-        F1s = zeros(Float64, 3, length(εs))
-
-        for (i, ε) in enumerate(εs)
-            # filter out coeffs with magnitude less than ε
-            sig = ( abs.(coeff) .> ε )
-            Ainf = get_Ainf(coeff .* sig, [2,3], 2)
-
-            # compute F1 scores
-            F1s[1, i] = my_F1(abs.(Ainf[2]), A2l, abs.(Ainf[3]), A3l, n)
-            F1s[2, i] = my_F1(abs.(Ainf[2]), A2l, n)
-            F1s[3, i] = my_F1(abs.(Ainf[3]), A3l, n)
-        end
-
-        return F1s
-    end
-
-    function test_inference(N, σ, n_itr; n = n_const, p = p_const, ooi = ooi_const, dmax = dmax_const, εs = εs_const, levels = levels_const)
+    function test_inference(N, σ, n_itr; n = n_const, p = p_const, ooi = ooi_const, dmax = dmax_const, τs = τs_const, levels = levels_const)
         # repeat inference
-        F1s_coeff_mags = zeros(Float64, 3, length(εs), n_itr)
+        F1s_coeff_mags = zeros(Float64, 3, length(τs), n_itr)
         F1s_coeff_CIs = zeros(Float64, 3, length(levels), n_itr)
 
         for itr in 1:n_itr
@@ -110,10 +67,10 @@ end
             _, coeff, out, _ = this_bayes(X, Y, ooi, dmax; opts=opts, ctrls=ctrls)
 
             # measure performance
-            F1s_coeff_mags[:, :, itr] = F1_filter_by_coeff_mag(coeff, εs)
+            F1s_coeff_mags[:, :, itr] = F1_filter_by_coeff_mag(coeff, A2l_const, A3l_const, τs)
 
             D = get_theta(X, dmax)
-            F1s_coeff_CIs[:, :, itr] = F1_filter_by_CI(out, D, coeff, levels)
+            F1s_coeff_CIs[:, :, itr] = F1_filter_by_CI(out, D, coeff, A2l_const, A3l_const, levels)
         end
 
         return F1s_coeff_mags, F1s_coeff_CIs
@@ -132,7 +89,7 @@ results = @showprogress pmap(collect(N_array)) do N
 end
 
 # allocate and unpack results
-F1s_coeff_mags = zeros(Float64, 3, length(εs), n_itr, length(N_array))
+F1s_coeff_mags = zeros(Float64, 3, length(τs), n_itr, length(N_array))
 F1s_coeff_CIs  = zeros(Float64, 3, length(levels), n_itr, length(N_array))
 
 for (i, _) in enumerate(N_array)
@@ -140,7 +97,8 @@ for (i, _) in enumerate(N_array)
     F1s_coeff_CIs[:, :, :, i]  .= results[i][2]
 end
 
-writedlm("out/filtering/coeff-mags-$(σ)-F1s.txt", F1s_coeff_mags)
-writedlm("out/filtering/coeff-CIs-$(σ)-F1s.txt", F1s_coeff_CIs)
+out_dir = joinpath(@__DIR__, "..", "out", "filtering")
+writedlm(joinpath(out_dir, "coeff-mags-$(σ)-F1s-$(timestamp).txt"), F1s_coeff_mags)
+writedlm(joinpath(out_dir, "coeff-CIs-$(σ)-F1s-$(timestamp).txt"), F1s_coeff_CIs)
 
 rmprocs(workers())
