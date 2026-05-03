@@ -16,15 +16,15 @@ n_itr = 80
 
 # read in results
 results_dir = joinpath(@__DIR__, "..", "out", "sparsity")
-timestamp = "2026-04-26"
+timestamp = "2026-05-02"
 
-bayes_aurocs = readdlm(joinpath(results_dir, "bayes-aurocs-$(timestamp)-sparsity-2.txt"))
+bayes_aurocs = readdlm(joinpath(results_dir, "bayes-aurocs-$(timestamp)-sparsity.txt"))
 bayes_aurocs = reshape(bayes_aurocs, 3, n_itr, length(t2_array), length(t3_array))
-this_aurocs  = readdlm(joinpath(results_dir, "this-aurocs-$(timestamp)-sparsity-2.txt"))
+this_aurocs  = readdlm(joinpath(results_dir, "this-aurocs-$(timestamp)-sparsity.txt"))
 this_aurocs  = reshape(this_aurocs, 3, length(λs), n_itr, length(t2_array), length(t3_array))
-bayes_auprcs = readdlm(joinpath(results_dir, "bayes-auprcs-$(timestamp)-sparsity-2.txt"))
+bayes_auprcs = readdlm(joinpath(results_dir, "bayes-auprcs-$(timestamp)-sparsity.txt"))
 bayes_auprcs = reshape(bayes_auprcs, 3, n_itr, length(t2_array), length(t3_array))
-this_auprcs  = readdlm(joinpath(results_dir, "this-auprcs-$(timestamp)-sparsity-2.txt"))
+this_auprcs  = readdlm(joinpath(results_dir, "this-auprcs-$(timestamp)-sparsity.txt"))
 this_auprcs  = reshape(this_auprcs, 3, length(λs), n_itr, length(t2_array), length(t3_array))
 
 # figure set-up
@@ -44,7 +44,7 @@ axs[2,1].ygridvisible=false
 axs[4,1].xgridvisible=false
 axs[4,1].ygridvisible=false
 
-λ_id = 5 # λ = 0.1
+λ_id = 3 # λ = 0.1
 
 auc = mean(bayes_aurocs[1, :, :, :], dims=1)[1, :, :]
 this_auc = mean(this_aurocs[1, λ_id, :, :, :], dims=1)[1, :, :] 

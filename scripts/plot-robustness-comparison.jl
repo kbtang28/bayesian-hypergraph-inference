@@ -2,8 +2,6 @@ using DelimitedFiles, CairoMakie
 import Statistics: mean, median, quantile
 import ColorSchemes: cmr_ember, cmr_prinsenvlag 
 
-include("performance-measures.jl")
-
 N_array = 60:5:600
 σ_array = range(0.05, 1.0, 20)
 n_itr = 300
@@ -11,43 +9,43 @@ n_itr = 300
 
 # read in and package results
 results_dir = joinpath(@__DIR__, "..", "out", "robustness")
-date = "2026-03-02"
+date = "2026-05-02"
 
-# bayes_aurocs = zeros(Float64, 3, n_itr, length(N_array), length(σ_array))
-# bayes_auprcs = zeros(Float64, 3, n_itr, length(N_array), length(σ_array))
-# this_aurocs  = zeros(Float64, 3, length(λs), n_itr, length(N_array), length(σ_array))
-# this_auprcs  = zeros(Float64, 3, length(λs), n_itr, length(N_array), length(σ_array))
+bayes_aurocs = zeros(Float64, 3, n_itr, length(N_array), length(σ_array))
+bayes_auprcs = zeros(Float64, 3, n_itr, length(N_array), length(σ_array))
+this_aurocs  = zeros(Float64, 3, length(λs), n_itr, length(N_array), length(σ_array))
+this_auprcs  = zeros(Float64, 3, length(λs), n_itr, length(N_array), length(σ_array))
 
-# for (j, _) in enumerate(σ_array)
-#     tmp_bayes_aurocs = readdlm(joinpath(results_dir, "bayes_aurocs_$(j)-$(date).txt"))
-#     tmp_bayes_aurocs = reshape(tmp_bayes_aurocs, 3, n_itr, length(N_array))
-#     bayes_aurocs[:, :, :, j] .= tmp_bayes_aurocs
+for (j, _) in enumerate(σ_array)
+    tmp_bayes_aurocs = readdlm(joinpath(results_dir, "bayes-aurocs-$(j)-$(date).txt"))
+    tmp_bayes_aurocs = reshape(tmp_bayes_aurocs, 3, n_itr, length(N_array))
+    bayes_aurocs[:, :, :, j] .= tmp_bayes_aurocs
 
-#     tmp_bayes_auprcs = readdlm(joinpath(results_dir, "bayes_auprcs_$(j)-$(date).txt"))
-#     tmp_bayes_auprcs = reshape(tmp_bayes_auprcs, 3, n_itr, length(N_array))
-#     bayes_auprcs[:, :, :, j] .= tmp_bayes_auprcs
+    tmp_bayes_auprcs = readdlm(joinpath(results_dir, "bayes-auprcs-$(j)-$(date).txt"))
+    tmp_bayes_auprcs = reshape(tmp_bayes_auprcs, 3, n_itr, length(N_array))
+    bayes_auprcs[:, :, :, j] .= tmp_bayes_auprcs
 
-#     tmp_this_aurocs = readdlm(joinpath(results_dir, "this_aurocs_$(j)-$(date).txt"))
-#     tmp_this_aurocs = reshape(tmp_this_aurocs, 3, length(λs), n_itr, length(N_array))
-#     this_aurocs[:, :, :, :, j] .= tmp_this_aurocs
+    tmp_this_aurocs = readdlm(joinpath(results_dir, "this-aurocs-$(j)-$(date).txt"))
+    tmp_this_aurocs = reshape(tmp_this_aurocs, 3, length(λs), n_itr, length(N_array))
+    this_aurocs[:, :, :, :, j] .= tmp_this_aurocs
 
-#     tmp_this_auprcs = readdlm(joinpath(results_dir, "this_auprcs_$(j)-$(date).txt"))
-#     tmp_this_auprcs = reshape(tmp_this_auprcs, 3, length(λs), n_itr, length(N_array))
-#     this_auprcs[:, :, :, :, j] .= tmp_this_auprcs
-# end
+    tmp_this_auprcs = readdlm(joinpath(results_dir, "this-auprcs-$(j)-$(date).txt"))
+    tmp_this_auprcs = reshape(tmp_this_auprcs, 3, length(λs), n_itr, length(N_array))
+    this_auprcs[:, :, :, :, j] .= tmp_this_auprcs
+end
 
-# writedlm(joinpath(results_dir, "bayes_aurocs.txt"), bayes_aurocs)
-# writedlm(joinpath(results_dir, "bayes_auprcs.txt"), bayes_auprcs)
-# writedlm(joinpath(results_dir, "this_aurocs.txt"), this_aurocs)
-# writedlm(joinpath(results_dir, "this_auprcs.txt"), this_auprcs)
+writedlm(joinpath(results_dir, "bayes-aurocs.txt"), bayes_aurocs)
+writedlm(joinpath(results_dir, "bayes-auprcs.txt"), bayes_auprcs)
+writedlm(joinpath(results_dir, "this-aurocs.txt"), this_aurocs)
+writedlm(joinpath(results_dir, "this-auprcs.txt"), this_auprcs)
 
-bayes_aurocs = readdlm(joinpath(results_dir, "bayes_aurocs.txt"))
+bayes_aurocs = readdlm(joinpath(results_dir, "bayes-aurocs.txt"))
 bayes_aurocs = reshape(bayes_aurocs, 3, n_itr, length(N_array), length(σ_array));
-bayes_auprcs = readdlm(joinpath(results_dir, "bayes_auprcs.txt"))
+bayes_auprcs = readdlm(joinpath(results_dir, "bayes-auprcs.txt"))
 bayes_auprcs = reshape(bayes_auprcs, 3, n_itr, length(N_array), length(σ_array));
-this_aurocs  = readdlm(joinpath(results_dir, "this_aurocs.txt"))
+this_aurocs  = readdlm(joinpath(results_dir, "this-aurocs.txt"))
 this_aurocs  = reshape(this_aurocs, 3, length(λs), n_itr, length(N_array), length(σ_array));
-this_auprcs  = readdlm(joinpath(results_dir, "this_auprcs.txt"))
+this_auprcs  = readdlm(joinpath(results_dir, "this-auprcs.txt"))
 this_auprcs  = reshape(this_auprcs, 3, length(λs), n_itr, length(N_array), length(σ_array));
 
 # figure set-up
@@ -146,5 +144,5 @@ text!(axs[3,3], 590, 0.1, text="(h)", font=:bold, align=(:right, :bottom))
 text!(axs[4,2], 590, 0.1, text="(i)", font=:bold, align=(:right, :bottom))
 text!(axs[4,3], 590, 0.1, text="(j)", font=:bold, align=(:right, :bottom))
 
-save(joinpath(@__DIR__, "..", "figs", "compare-robustness-sweeps.png"), fig, dpi=300)
+# save(joinpath(@__DIR__, "..", "figs", "compare-robustness-sweeps.png"), fig, dpi=300)
 fig

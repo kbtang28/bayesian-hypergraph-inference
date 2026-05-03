@@ -19,13 +19,14 @@ bb = get(cmr_prinsenvlag, 0.88)
 
 # read in data from node swap experiment
 results_dir = joinpath(@__DIR__, "..", "out", "node-swap")
-F1s = readdlm("F1s-fixed-noise.txt"); F1s = reshape(F1s, (3, n_graphs, length(n_swaps), length(alphas)))
-pres = readdlm("pres-fixed-noise.txt"); pres = reshape(pres, (3, n_graphs, length(n_swaps), length(alphas)))
-recs = readdlm("recs-fixed-noise.txt"); recs = reshape(recs, (3, n_graphs, length(n_swaps), length(alphas)))
-auprcs = readdlm("auprcs-fixed-noise.txt"); auprcs = reshape(auprcs, (3, n_graphs, length(n_swaps), length(alphas)))
-aurocs = readdlm("aurocs-fixed-noise.txt"); aurocs = reshape(aurocs, (3, n_graphs, length(n_swaps), length(alphas)))
-betas = readdlm("betas-fixed-noise.txt"); betas = reshape(betas, (n, n_graphs, length(n_swaps), length(alphas)))
-deg_corr = readdlm("deg-corr-fixed-noise.txt"); deg_corr = reshape(deg_corr, n_graphs, length(n_swaps))
+timestamp = "2026-05-02"
+F1s = readdlm(joinpath(results_dir, "F1s-fixed-noise-$(timestamp).txt")); F1s = reshape(F1s, (3, n_graphs, length(n_swaps), length(alphas)))
+pres = readdlm(joinpath(results_dir, "pres-fixed-noise-$(timestamp).txt")); pres = reshape(pres, (3, n_graphs, length(n_swaps), length(alphas)))
+recs = readdlm(joinpath(results_dir, "recs-fixed-noise-$(timestamp).txt")); recs = reshape(recs, (3, n_graphs, length(n_swaps), length(alphas)))
+auprcs = readdlm(joinpath(results_dir, "auprcs-fixed-noise-$(timestamp).txt")); auprcs = reshape(auprcs, (3, n_graphs, length(n_swaps), length(alphas)))
+aurocs = readdlm(joinpath(results_dir, "aurocs-fixed-noise-$(timestamp).txt")); aurocs = reshape(aurocs, (3, n_graphs, length(n_swaps), length(alphas)))
+betas = readdlm(joinpath(results_dir, "betas-fixed-noise-$(timestamp).txt")); betas = reshape(betas, (n, n_graphs, length(n_swaps), length(alphas)))
+deg_corr = readdlm(joinpath(results_dir, "deg-corr-fixed-noise-$(timestamp).txt")); deg_corr = reshape(deg_corr, n_graphs, length(n_swaps))
 
 avg_auprcs = mean(auprcs, dims=2)[:, 1, :, :]
 avg_aurocs = mean(aurocs, dims=2)[:, 1, :, :]
@@ -42,14 +43,14 @@ hidexdecorations!(ax1)
 
 axinset = Axis(fig[1,1], width=Relative(0.4), height=Relative(0.45), halign=0.94, valign=0.09, limits=(nothing, nothing, nothing, 1.0), ylabel="Pairwise F1", yticks=0.7:0.1:1.0, xgridvisible=false, ygridvisible=false)
 for (j, _) in Iterators.reverse(enumerate(alphas))
-    scatter!(axinset, vec(deg_corr), vec(F1s[2, :, :, j]), color=(alpha_palette[j], 0.5), markersize=6)
+    scatter!(axinset, vec(deg_corr), vec(F1s[2, :, :, j]), color=(alpha_palette[j], 0.8), markersize=4)
 end
 linkyaxes!(ax1, axinset)
 hidexdecorations!(axinset)
 
 ax2 = Axis(fig[2,1], xlabel="Cross-order degree correlation", ylabel="Pairwise AUPRC", ylabelpadding=8, xgridvisible=false, ygridvisible=false)
 for j in length(alphas):-1:1
-    scatter!(ax2, vec(deg_corr), vec(auprcs[2, :, :, j]), color=(alpha_palette[j], 0.7))
+    scatter!(ax2, vec(deg_corr), vec(auprcs[2, :, :, j]), color=(alpha_palette[j], 0.9))
 end
 
 Colorbar(fig[1,2], width=8.0, limits=(-1.5, 3.5), colormap=cgrad(alpha_palette, 5, categorical=:true), ticks=log2.(alphas), label="log₂(c)", labelpadding=1, tickformat="{:d}", vertical=true)

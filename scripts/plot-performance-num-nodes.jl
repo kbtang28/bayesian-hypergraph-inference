@@ -2,8 +2,6 @@ using DelimitedFiles, CairoMakie
 import Statistics: mean, median, quantile
 import ColorSchemes: cmr_ember, cmr_prinsenvlag 
 
-include("performance-measures.jl")
-
 n_array = [7, 10, 15, 20, 30]
 ρ_array = 0.5:0.5:4.0
 λs = [0.01, 0.05, 0.1, 0.5, 1.0]
@@ -11,35 +9,35 @@ n_itr = 50
 
 # read in and package results
 results_dir = joinpath(@__DIR__, "..", "out", "num-nodes")
-date = "2026-04-21"
+date = "2026-05-02"
 
-# bayes_aurocs = zeros(Float64, 3, n_itr, length(ρ_array), length(n_array))
-# bayes_auprcs = zeros(Float64, 3, n_itr, length(ρ_array), length(n_array))
-# this_aurocs  = zeros(Float64, 3, length(λs), n_itr, length(ρ_array), length(n_array))
-# this_auprcs  = zeros(Float64, 3, length(λs), n_itr, length(ρ_array), length(n_array))
+bayes_aurocs = zeros(Float64, 3, n_itr, length(ρ_array), length(n_array))
+bayes_auprcs = zeros(Float64, 3, n_itr, length(ρ_array), length(n_array))
+this_aurocs  = zeros(Float64, 3, length(λs), n_itr, length(ρ_array), length(n_array))
+this_auprcs  = zeros(Float64, 3, length(λs), n_itr, length(ρ_array), length(n_array))
 
-# for (j, _) in enumerate(n_array)
-#     tmp_bayes_aurocs = readdlm(joinpath(results_dir, "bayes-aurocs-$(j)-$(date)-num-nodes.txt"))
-#     tmp_bayes_aurocs = reshape(tmp_bayes_aurocs, 3, n_itr, length(ρ_array))
-#     bayes_aurocs[:, :, :, j] .= tmp_bayes_aurocs
+for (j, _) in enumerate(n_array)
+    tmp_bayes_aurocs = readdlm(joinpath(results_dir, "bayes-aurocs-$(j)-$(date)-num-nodes.txt"))
+    tmp_bayes_aurocs = reshape(tmp_bayes_aurocs, 3, n_itr, length(ρ_array))
+    bayes_aurocs[:, :, :, j] .= tmp_bayes_aurocs
 
-#     tmp_bayes_auprcs = readdlm(joinpath(results_dir, "bayes-auprcs-$(j)-$(date)-num-nodes.txt"))
-#     tmp_bayes_auprcs = reshape(tmp_bayes_auprcs, 3, n_itr, length(ρ_array))
-#     bayes_auprcs[:, :, :, j] .= tmp_bayes_auprcs
+    tmp_bayes_auprcs = readdlm(joinpath(results_dir, "bayes-auprcs-$(j)-$(date)-num-nodes.txt"))
+    tmp_bayes_auprcs = reshape(tmp_bayes_auprcs, 3, n_itr, length(ρ_array))
+    bayes_auprcs[:, :, :, j] .= tmp_bayes_auprcs
 
-#     tmp_this_aurocs = readdlm(joinpath(results_dir, "this-aurocs-$(j)-$(date)-num-nodes.txt"))
-#     tmp_this_aurocs = reshape(tmp_this_aurocs, 3, length(λs), n_itr, length(ρ_array))
-#     this_aurocs[:, :, :, :, j] .= tmp_this_aurocs
+    tmp_this_aurocs = readdlm(joinpath(results_dir, "this-aurocs-$(j)-$(date)-num-nodes.txt"))
+    tmp_this_aurocs = reshape(tmp_this_aurocs, 3, length(λs), n_itr, length(ρ_array))
+    this_aurocs[:, :, :, :, j] .= tmp_this_aurocs
 
-#     tmp_this_auprcs = readdlm(joinpath(results_dir, "this-auprcs-$(j)-$(date)-num-nodes.txt"))
-#     tmp_this_auprcs = reshape(tmp_this_auprcs, 3, length(λs), n_itr, length(ρ_array))
-#     this_auprcs[:, :, :, :, j] .= tmp_this_auprcs
-# end
+    tmp_this_auprcs = readdlm(joinpath(results_dir, "this-auprcs-$(j)-$(date)-num-nodes.txt"))
+    tmp_this_auprcs = reshape(tmp_this_auprcs, 3, length(λs), n_itr, length(ρ_array))
+    this_auprcs[:, :, :, :, j] .= tmp_this_auprcs
+end
 
-# writedlm(joinpath(results_dir, "bayes_aurocs.txt"), bayes_aurocs)
-# writedlm(joinpath(results_dir, "bayes_auprcs.txt"), bayes_auprcs)
-# writedlm(joinpath(results_dir, "this_aurocs.txt"), this_aurocs)
-# writedlm(joinpath(results_dir, "this_auprcs.txt"), this_auprcs)
+writedlm(joinpath(results_dir, "bayes_aurocs.txt"), bayes_aurocs)
+writedlm(joinpath(results_dir, "bayes_auprcs.txt"), bayes_auprcs)
+writedlm(joinpath(results_dir, "this_aurocs.txt"), this_aurocs)
+writedlm(joinpath(results_dir, "this_auprcs.txt"), this_auprcs)
 
 bayes_aurocs = readdlm(joinpath(results_dir, "bayes_aurocs.txt"))
 bayes_aurocs = reshape(bayes_aurocs, 3, n_itr, length(ρ_array), length(n_array));
