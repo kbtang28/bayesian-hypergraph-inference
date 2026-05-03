@@ -9,11 +9,11 @@ addprocs(max(num_procs-1, 0), topology=:master_worker)
 end
 
 # load dependencies...
+@everywhere include(joinpath(@__DIR__, "..", "src", "BayesTHIS.jl"))
 @everywhere begin
-    include(joinpath(@__DIR__, "..", "BayesTHIS.jl"))
     using .BayesTHIS
-    using Dates
-    import StatsBase: std
+    using Dates, Random, SparseBayes, DelimitedFiles
+    import StatsBase: std, mean
 end
 
 Random.seed!(271828)
@@ -66,10 +66,10 @@ end
 
             # measure quality of inference
             D = get_theta(X, dmax)
-            A, B, C = F1s_filter_by_CI(out, D, coeff, A2l, sA3l, 0.9545; extra_out=true)
-            F1s[:, j]    .= A
-            pres[:, j]   .= B
-            recs[:, j]   .= C
+            F1s[:, j] .= F1_filter_by_CI(out, D, coeff, A2l, sA3l, [0.9545])
+            A, B = precision_recall_filter_by_CI(out, D, coeff, A2l, sA3l, [0.9545])
+            pres[:, j] .= A
+            recs[:, j] .= B
             aurocs[:, j] .= get_aurocs(Ainf, n, A2l, sA3l)
             auprcs[:, j] .= get_auprcs(Ainf, n, A2l, sA3l)
 

@@ -9,8 +9,8 @@ addprocs(max(num_procs-1, 0), topology=:master_worker)
 end
 
 # load dependencies
+@everywhere include(joinpath(@__DIR__, "..", "src", "BayesTHIS.jl"))
 @everywhere begin
-    include(joinpath(@__DIR__, "..", "BayesTHIS.jl"))
     using .BayesTHIS
     using Random, Printf, SparseBayes, Dates, DelimitedFiles, Distributions, ProgressMeter
 end
@@ -19,10 +19,10 @@ end
 n = 10
 
 hyperg_models_dir = joinpath(@__DIR__, "..", "hyperg-models")
-A2 = readdlm(joinpath(hyperg_models, "toy-hyperg-n10v2-A2.txt"))
-A2l = readdlm(joinpath(hyperg_models, "toy-hyperg-n10v2-A2l.txt"))
-A3 = readdlm(joinpath(hyperg_models, "toy-hyperg-n10v2-A3.txt")); A3 = reshape(A3, n, n, n)
-A3l = readdlm(joinpath(hyperg_models, "toy-hyperg-n10v2-A3l.txt"))
+A2 = readdlm(joinpath(hyperg_models_dir, "toy-hyperg-n10v2-A2.txt"))
+A2l = readdlm(joinpath(hyperg_models_dir, "toy-hyperg-n10v2-A2l.txt"))
+A3 = readdlm(joinpath(hyperg_models_dir, "toy-hyperg-n10v2-A3.txt")); A3 = reshape(A3, n, n, n)
+A3l = readdlm(joinpath(hyperg_models_dir, "toy-hyperg-n10v2-A3l.txt"))
 
 p = (A2, A3, zeros(n), π/4, π/4)
 
@@ -81,7 +81,6 @@ end
 timestamp = Dates.format(now(), "yyyy-mm-dd")
 
 # set up log files
-println("Running array_id=$(array_id) with σ=$(σ), nworkers()=$(nworkers())")
 println("Running array_id=$(array_id) with σ=$(σ), nworkers()=$(nworkers())")
 
 results = @showprogress pmap(collect(N_array)) do N

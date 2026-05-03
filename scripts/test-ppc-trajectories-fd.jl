@@ -9,10 +9,10 @@ addprocs(max(num_procs-1, 0), topology=:master_worker)
 end
 
 # load dependencies...
+@everywhere include(joinpath(@__DIR__, "..", "src", "BayesTHIS.jl"))
 @everywhere begin
-    include(joinpath(@__DIR__, "..", "BayesTHIS.jl"))
     using .BayesTHIS
-    using Random, ProgressMeter, OrdinaryDiffEq, SparseBayes, DelimitedFiles, Distributions, Dates, Printf
+    using Random, ProgressMeter, OrdinaryDiffEq, SparseBayes, DelimitedFiles, Distributions, Dates, Printf, LinearAlgebra
 end
 
 Random.seed!(18)
@@ -196,9 +196,9 @@ for (k, σx) in enumerate(σxs)
 end
 
 out_dir = joinpath(@__DIR__, "..", "out", "ppc")
-writedlm("traj-fd-pvals-$(timestamp).txt", pvals)
-writedlm("traj-fd-aucs-$(timestamp).txt", aucs)
-writedlm("traj-fd-auc3s-$(timestamp).txt", auc3s)
-writedlm("traj-fd-F1s-$(timestamp).txt", F1s)
+writedlm(joinpath(out_dir, "traj-fd-pvals-$(timestamp).txt"), pvals)
+writedlm(joinpath(out_dir, "traj-fd-aucs-$(timestamp).txt"), aucs)
+writedlm(joinpath(out_dir, "traj-fd-auc3s-$(timestamp).txt"), auc3s)
+writedlm(joinpath(out_dir, "traj-fd-F1s-$(timestamp).txt"), F1s)
 
 rmprocs(workers())

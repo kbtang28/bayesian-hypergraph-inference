@@ -9,8 +9,8 @@ addprocs(max(num_procs-1, 0), topology=:master_worker)
 end
 
 # load dependencies...
+@everywhere include(joinpath(@__DIR__, "..", "src", "BayesTHIS.jl"))
 @everywhere begin
-    include(joinpath(@__DIR__, "..", "BayesTHIS.jl"))
     using .BayesTHIS
     using Random, Printf, SparseBayes, LinearAlgebra, Dates, DelimitedFiles, Distributions, ProgressMeter
 end
