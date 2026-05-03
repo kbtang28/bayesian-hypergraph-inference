@@ -1,6 +1,6 @@
 module BayesTHIS
 
-export F1_filter_by_CI, F1_filter_by_coeff_mag
+export F1_filter_by_CI, F1_filter_by_coeff_mag, precision_recall_filter_by_CI
 export centralFDcoeffs, FD
 export gnm_random_hyperg, hyperg_connected
 export f_kuramoto_3rd, f_kuramoto_3rd!
