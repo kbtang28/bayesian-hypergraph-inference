@@ -2409,7 +2409,9 @@ version = "1.12.0"
 
 [[deps.SparseBayes]]
 deps = ["BenchmarkTools", "Dates", "DelimitedFiles", "LinearAlgebra", "Printf", "Random", "Statistics", "Test"]
-path = "../SparseBayes"
+git-tree-sha1 = "87154e1bd29a5b1067acf1686efa6c68f50b90c3"
+repo-rev = "main"
+repo-url = "https://github.com/kbtang28/SparseBayes.jl"
 uuid = "780c597a-6b79-4593-816a-d9a0924fb77b"
 version = "0.0.0"
 
