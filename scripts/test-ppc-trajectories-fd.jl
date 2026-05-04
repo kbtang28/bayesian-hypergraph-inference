@@ -196,6 +196,9 @@ for (k, σx) in enumerate(σxs)
 end
 
 out_dir = joinpath(@__DIR__, "..", "out", "ppc")
+if !isdir(out_dir)
+    mkpath(out_dir)
+end
 writedlm(joinpath(out_dir, "traj-fd-pvals-$(timestamp).txt"), pvals)
 writedlm(joinpath(out_dir, "traj-fd-aucs-$(timestamp).txt"), aucs)
 writedlm(joinpath(out_dir, "traj-fd-auc3s-$(timestamp).txt"), auc3s)

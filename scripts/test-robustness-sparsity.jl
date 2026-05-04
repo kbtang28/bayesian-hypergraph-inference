@@ -96,6 +96,9 @@ for (j, t2) in enumerate(t2_array)
 end
 
 out_dir = joinpath(@__DIR__, "..", "out", "sparsity")
+if !isdir(out_dir)
+    mkpath(out_dir)
+end
 writedlm(joinpath(out_dir, "bayes-aurocs-$(timestamp)-sparsity.txt"), bayes_aurocs)
 writedlm(joinpath(out_dir, "this-aurocs-$(timestamp)-sparsity.txt"), this_aurocs)
 writedlm(joinpath(out_dir, "bayes-auprcs-$(timestamp)-sparsity.txt"), bayes_auprcs)

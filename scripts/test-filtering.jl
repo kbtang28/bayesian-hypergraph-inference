@@ -97,6 +97,9 @@ for (i, _) in enumerate(N_array)
 end
 
 out_dir = joinpath(@__DIR__, "..", "out", "filtering")
+if !isdir(out_dir)
+    mkpath(out_dir)
+end
 writedlm(joinpath(out_dir, "coeff-mags-$(σ)-F1s-$(timestamp).txt"), F1s_coeff_mags)
 writedlm(joinpath(out_dir, "coeff-CIs-$(σ)-F1s-$(timestamp).txt"), F1s_coeff_CIs)
 

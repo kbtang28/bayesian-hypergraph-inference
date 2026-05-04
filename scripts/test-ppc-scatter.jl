@@ -161,6 +161,9 @@ for (k, σ) in enumerate(σs)
 end
 
 out_dir = joinpath(@__DIR__, "..", "out", "ppc")
+if !isdir(out_dir)
+    mkpath(out_dir)
+end
 writedlm(joinpath(out_dir, "scatter-pvals-$(timestamp).txt"), pvals)
 writedlm(joinpath(out_dir, "scatter-aucs-$(timestamp).txt"), aucs)
 writedlm(joinpath(out_dir, "scatter-auc3s-$(timestamp).txt"), auc3s)

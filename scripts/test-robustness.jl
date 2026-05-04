@@ -108,6 +108,9 @@ for (i, _) in enumerate(N_array)
 end
 
 out_dir = joinpath(@__DIR__, "..", "out", "robustness")
+if !isdir(out_dir)
+    mkpath(out_dir)
+end
 writedlm(joinpath(out_dir, "bayes-aurocs-$(array_id)-$(timestamp).txt"), bayes_aurocs)
 writedlm(joinpath(out_dir, "this-aurocs-$(array_id)-$(timestamp).txt"), this_aurocs)
 writedlm(joinpath(out_dir, "bayes-auprcs-$(array_id)-$(timestamp).txt"), bayes_auprcs)

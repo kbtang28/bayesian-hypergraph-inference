@@ -128,6 +128,9 @@ for i in 1:n_graphs
 end
 
 out_dir = joinpath(@__DIR__, "..", "out", "node-swap")
+if !isdir(out_dir)
+    mkpath(out_dir)
+end
 writedlm(joinpath(out_dir, "F1s-fixed-noise-$(timestamp).txt"), F1s)
 writedlm(joinpath(out_dir, "pres-fixed-noise-$(timestamp).txt"), pres)
 writedlm(joinpath(out_dir, "recs-fixed-noise-$(timestamp).txt"), recs)

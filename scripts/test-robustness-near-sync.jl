@@ -177,6 +177,9 @@ for (k, coupling) in enumerate(couplings)
 end
 
 out_dir = joinpath(@__DIR__, "..", "out", "near-sync")
+if !isdir(out_dir)
+    mkpath(out_dir)
+end
 writedlm(joinpath(out_dir, "u0s-$(timestamp).txt"), u0s)
 writedlm(joinpath(out_dir, "kappas-$(timestamp).txt"), kappas)
 writedlm(joinpath(out_dir, "bayes-aurocs-$(timestamp).txt"), bayes_aurocs)
