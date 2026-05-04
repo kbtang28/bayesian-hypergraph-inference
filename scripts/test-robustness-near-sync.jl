@@ -3,7 +3,7 @@ import Pkg; Pkg.activate(joinpath(@__DIR__, ".."))
 # load dependencies...
 include(joinpath(@__DIR__, "..", "src", "BayesTHIS.jl"))
 using .BayesTHIS
-using Random, Printf, SparseBayes, LinearAlgebra, Dates, DelimitedFiles, OrdinaryDiffEq, CairoMakie
+using Random, Printf, LinearAlgebra, Dates, DelimitedFiles, OrdinaryDiffEq, CairoMakie
 import Statistics: mean, std
 import StatsBase: sample
 

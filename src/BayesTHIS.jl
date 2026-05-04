@@ -10,6 +10,7 @@ export degrees, degree_corr, degree_hetero_ratio, flag_complex, shuffle_hyperedg
 export this_bayes
 export this
 export get_θd, get_thetad, get_θ, get_theta, get_d, get_Ainf
+export SBOpts, SBSettings, SBCtrlSettings, SBOut, SBDiagnostics # from SparseBayes.jl
 
 include("f1s-with-filtering.jl")
 include("finite-diffs.jl")

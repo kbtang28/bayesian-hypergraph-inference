@@ -12,7 +12,7 @@ end
 @everywhere include(joinpath(@__DIR__, "..", "src", "BayesTHIS.jl"))
 @everywhere begin
     using .BayesTHIS
-    using Random, Printf, SparseBayes, LinearAlgebra, Dates, DelimitedFiles, ProgressMeter
+    using Random, Printf, LinearAlgebra, Dates, DelimitedFiles, ProgressMeter
 end
 
 # experiment & model parameters (master)

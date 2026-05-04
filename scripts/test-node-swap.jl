@@ -12,7 +12,7 @@ end
 @everywhere include(joinpath(@__DIR__, "..", "src", "BayesTHIS.jl"))
 @everywhere begin
     using .BayesTHIS
-    using Dates, Random, SparseBayes, DelimitedFiles
+    using Dates, Random, DelimitedFiles
     import StatsBase: std, mean
 end
 
