@@ -1,7 +1,4 @@
 .vscode/
-out/
-figs/
-
-*.png
 
 slurm/
+out/
