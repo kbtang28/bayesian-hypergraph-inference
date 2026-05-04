@@ -36,3 +36,7 @@ Below is a more detailed mapping between results in the paper and experiment/plo
 | Fig. 6 | `test-node-swap.jl`<br>`plot-structure-effects.jl` |
 | Fig. 7 | `test-robustness-num-nodes.jl`<br>`plot-performance-num-nodes.jl` |
 | Fig. 8 | `test-robustness-sparsity.jl`<br>`plot-performance-sparsity.jl` |
+
+## Acknowledgements
+
+Code in `src/this.jl` and `src/this-tools.jl` are adapted from Delabays et al. (2025), *Hypergraph reconstruction from dynamics*, with the original code available [here](https://github.com/TaylorBasedHypergraphInference/THIS).
