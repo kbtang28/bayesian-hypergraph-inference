@@ -39,4 +39,4 @@ Below is a more detailed mapping between results in the paper and experiment/plo
 
 ## Acknowledgements
 
-Code in `src/this.jl` and `src/this-tools.jl` are adapted from Delabays et al. (2025), *Hypergraph reconstruction from dynamics*, with the original code available [here](https://github.com/TaylorBasedHypergraphInference/THIS).
+Code in `src/this.jl` and `src/this-tools.jl` are adapted from Delabays et al. (2025), *Hypergraph reconstruction from dynamics*, with the original code available [here](https://github.com/TaylorBasedHypergraphInference/THIS). Thank you to Robin Delabays for generously sharing additional code associated with their work.
