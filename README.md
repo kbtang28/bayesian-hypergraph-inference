@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/1046517867.svg)](https://doi.org/10.5281/zenodo.20040617)
+
 # Bayesian hypergraph inference from dynamics
 
 This repository accompanies the preprint "Bayesian hypergraph inference from scarce and noisy dynamical observations" by Katerina Tang, Vivek Srikrishnan, and Jackson Kulik.
