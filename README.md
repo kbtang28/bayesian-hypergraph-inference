@@ -1,6 +1,6 @@
 # Bayesian hypergraph inference from dynamics
 
-This repository accompanies the preprint "Bayesian inference of hypergraph structure from scarce and noisy dynamical observations" by Katerina Tang, Vivek Srikrishnan, and Jackson Kulik.
+This repository accompanies the preprint "Bayesian hypergraph inference from scarce and noisy dynamical observations" by Katerina Tang, Vivek Srikrishnan, and Jackson Kulik.
 
 ## Dependencies
 
