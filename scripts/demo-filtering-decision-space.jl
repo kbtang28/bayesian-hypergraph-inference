@@ -1,7 +1,7 @@
 import Pkg; Pkg.activate(joinpath(@__DIR__, ".."))
 
-include(joinpath(@__DIR__, "..", "src", "BayesTHIS.jl"))
-using .BayesTHIS
+# include(joinpath(@__DIR__, "..", "src", "BayesTHIS.jl"))
+# using .BayesTHIS
 using Random, SparseBayes, Printf, Distributions, LinearAlgebra, Dates, DelimitedFiles, CairoMakie
 import ColorSchemes: cmr_prinsenvlag, get
 psblues = get(cmr_prinsenvlag, range(0.7, 0.9, 3))
@@ -115,10 +115,10 @@ _, M = size(Theta)
 d = get_d(n, dmax)
 
 # figure set-up
-pt = 4 ÷ 3; inch = 96
-fig = Figure(size=(3.3inch, 4inch), fontsize=10pt)
+pt = 4 ÷ 3; inch = 96; cm = inch/2.54
+fig = Figure(size=(15cm, 5.5cm), fontsize=10pt)
 ax1 = Axis(fig[1,1], xgridvisible=false, ygridvisible=false, yscale=log10)
-ax2 = Axis(fig[2,1], xgridvisible=false, ygridvisible=false, yscale=log10)
+ax2 = Axis(fig[1,2], xgridvisible=false, ygridvisible=false, yscale=log10)
 
 # LOW NOISE SETTING
 Y = f_kuramoto_3rd(X, p...) + 0.1*randn(size(X))
@@ -134,11 +134,11 @@ display(F1_filter_by_CI(out, Theta, coeff, A2l, A3l, levels))
 
 sds = conditional_posterior_sds(out, Theta)
 
-coeffs_to_plot = Float64[]
-sds_to_plot = Float64[]
-true_to_plot = Bool[]
-leak_to_plot = Bool[]
-pwise_to_plot = Bool[]
+coeffs_to_plot_a = Float64[]
+sds_to_plot_a = Float64[]
+true_to_plot_a = Bool[]
+leak_to_plot_a = Bool[]
+pwise_to_plot_a = Bool[]
 for j in 1:n
     v = valid_monomial(j, n, dmax)
     t = true_monomial[j]
@@ -146,62 +146,34 @@ for j in 1:n
     for i in v
         if (coeff[i, j] != 0.0)
             # plot valid monomials with non-zero coefficients only
-            push!(coeffs_to_plot, coeff[i,j])
-            push!(sds_to_plot, sds[i,j])
+            push!(coeffs_to_plot_a, coeff[i,j])
+            push!(sds_to_plot_a, sds[i,j])
 
             if i in t
                 # true monomial - true positives
-                push!(true_to_plot, true)
-                push!(leak_to_plot, false)
+                push!(true_to_plot_a, true)
+                push!(leak_to_plot_a, false)
             else
                 # false positives
-                push!(true_to_plot, false)
+                push!(true_to_plot_a, false)
                 if i in l
                     # "leaking" pairwise interaction
-                    push!(leak_to_plot, true)
+                    push!(leak_to_plot_a, true)
                 else
-                    push!(leak_to_plot, false)
+                    push!(leak_to_plot_a, false)
                 end
             end
 
             if length(d[i, :][d[i, :] .!= 0]) == 1
                 # pairwise interactions
-                push!(pwise_to_plot, true)
+                push!(pwise_to_plot_a, true)
             else
                 # triadic interactions
-                push!(pwise_to_plot, false)
+                push!(pwise_to_plot_a, false)
             end
         end
     end
 end
-
-# plot panel (a)
-xs = range(minimum(sds_to_plot), maximum(sds_to_plot), 100)
-maxy = maximum(abs.(coeffs_to_plot))
-xlims!(ax1, extrema(xs))
-ylims!(ax1, nothing, maxy)
-
-# color decision space
-band!(ax1, xs, xs, maxy*ones(100), color=psblues[1], alpha=0.3)
-band!(ax1, xs, 2*xs, maxy*ones(100), color=psblues[2], alpha=0.3)
-band!(ax1, xs, 3*xs, maxy*ones(100), color=psblues[3], alpha=0.3)
-lines!(ax1, xs[1:87], xs[1:87], color=:black, linestyle=:dash, linewidth=1.0)
-text!(ax1, 0.89, 0.655, text="0.683", space=:relative, fontsize=8pt, rotation=pi/48, align=(:left, :center))
-lines!(ax1, xs[1:87], 2*xs[1:87], color=:black, linestyle=:dash, linewidth=1.0)
-text!(ax1, 0.89, 0.75, text="0.954", space=:relative, fontsize=8pt, rotation=pi/48, align=(:left, :center))
-lines!(ax1, xs[1:87], 3*xs[1:87], color=:black, linestyle=:dash, linewidth=1.0)
-text!(ax1, 0.89, 0.815, text="0.997", space=:relative, fontsize=8pt, rotation=pi/48, align=(:left, :center))
-
-# plot false pairwise positives
-scatter!(ax1, sds_to_plot[.!true_to_plot .& (pwise_to_plot .& .!leak_to_plot)], abs.(coeffs_to_plot[.!true_to_plot .& (pwise_to_plot .& .!leak_to_plot)]), color=falseorg, alpha=0.6, markersize=8)
-# plot false triadic positives
-scatter!(ax1, sds_to_plot[.!true_to_plot .& .!pwise_to_plot], abs.(coeffs_to_plot[.!true_to_plot .& .!pwise_to_plot]), color=falseorg, alpha=0.6, marker=:utriangle, markersize=8)
-# plot leaking triadic → pairwise false positives
-scatter!(ax1, sds_to_plot[leak_to_plot], abs.(coeffs_to_plot[leak_to_plot]), color=leakcyan, alpha=0.7, markersize=8)
-# plot true pairwise positives
-scatter!(ax1, sds_to_plot[true_to_plot .& pwise_to_plot], abs.(coeffs_to_plot[true_to_plot .& pwise_to_plot]), color=pwblue, alpha=0.7, markersize=10)
-# plot true triadic positivies
-scatter!(ax1, sds_to_plot[true_to_plot .& .!pwise_to_plot], abs.(coeffs_to_plot[true_to_plot .& .!pwise_to_plot]), color=triteal, alpha=1.0, marker=:utriangle, markersize=10)
 
 # HIGH NOISE SETTING
 Y = f_kuramoto_3rd(X, p...) + 0.5*randn(size(X))
@@ -217,11 +189,11 @@ display(F1_filter_by_CI(out, Theta, coeff, A2l, A3l, levels))
 
 sds = conditional_posterior_sds(out, Theta)
 
-coeffs_to_plot = Float64[]
-sds_to_plot = Float64[]
-true_to_plot = Bool[]
-leak_to_plot = Bool[]
-pwise_to_plot = Bool[]
+coeffs_to_plot_b = Float64[]
+sds_to_plot_b = Float64[]
+true_to_plot_b = Bool[]
+leak_to_plot_b = Bool[]
+pwise_to_plot_b = Bool[]
 for j in 1:n
     v = valid_monomial(j, n, dmax)
     t = true_monomial[j]
@@ -229,69 +201,97 @@ for j in 1:n
     for i in v
         if (coeff[i, j] != 0.0)
             # plot valid monomials with non-zero coefficients only
-            push!(coeffs_to_plot, coeff[i,j])
-            push!(sds_to_plot, sds[i,j])
+            push!(coeffs_to_plot_b, coeff[i,j])
+            push!(sds_to_plot_b, sds[i,j])
 
             if i in t
                 # true monomial - true positives
-                push!(true_to_plot, true)
-                push!(leak_to_plot, false)
+                push!(true_to_plot_b, true)
+                push!(leak_to_plot_b, false)
             else
                 # false positives
-                push!(true_to_plot, false)
+                push!(true_to_plot_b, false)
                 if i in l
                     # "leaking" pairwise interaction
-                    push!(leak_to_plot, true)
+                    push!(leak_to_plot_b, true)
                 else
-                    push!(leak_to_plot, false)
+                    push!(leak_to_plot_b, false)
                 end
             end
 
             if length(d[i, :][d[i, :] .!= 0]) == 1
                 # pairwise interactions
-                push!(pwise_to_plot, true)
+                push!(pwise_to_plot_b, true)
             else
                 # triadic interactions
-                push!(pwise_to_plot, false)
+                push!(pwise_to_plot_b, false)
             end
         end
     end
 end
 
+# plot panel (a)
+xs_a = range(minimum(sds_to_plot_a), maximum(sds_to_plot_a), 100)
+maxy_a = maximum(abs.(coeffs_to_plot_a)); maxy_b = maximum(abs.(coeffs_to_plot_b))
+maxy = maximum([maxy_a, maxy_b])
+xlims!(ax1, extrema(xs_a))
+ylims!(ax1, nothing, maxy)
+
+# color decision space
+band!(ax1, xs_a, xs_a, maxy*ones(100), color=psblues[1], alpha=0.3)
+band!(ax1, xs_a, 2*xs_a, maxy*ones(100), color=psblues[2], alpha=0.3)
+band!(ax1, xs_a, 3*xs_a, maxy*ones(100), color=psblues[3], alpha=0.3)
+lines!(ax1, xs_a[1:87], xs_a[1:87], color=:black, linestyle=:dash, linewidth=1.0)
+text!(ax1, 0.89, 0.655, text="0.683", space=:relative, fontsize=8pt, rotation=pi/48, align=(:left, :center))
+lines!(ax1, xs_a[1:87], 2*xs_a[1:87], color=:black, linestyle=:dash, linewidth=1.0)
+text!(ax1, 0.89, 0.75, text="0.954", space=:relative, fontsize=8pt, rotation=pi/48, align=(:left, :center))
+lines!(ax1, xs_a[1:87], 3*xs_a[1:87], color=:black, linestyle=:dash, linewidth=1.0)
+text!(ax1, 0.89, 0.815, text="0.997", space=:relative, fontsize=8pt, rotation=pi/48, align=(:left, :center))
+
+# plot false pairwise positives
+scatter!(ax1, sds_to_plot_a[.!true_to_plot_a .& (pwise_to_plot_a .& .!leak_to_plot_a)], abs.(coeffs_to_plot_a[.!true_to_plot_a .& (pwise_to_plot_a .& .!leak_to_plot_a)]), color=falseorg, alpha=0.6, markersize=8)
+# plot false triadic positives
+scatter!(ax1, sds_to_plot_a[.!true_to_plot_a .& .!pwise_to_plot_a], abs.(coeffs_to_plot_a[.!true_to_plot_a .& .!pwise_to_plot_a]), color=falseorg, alpha=0.6, marker=:utriangle, markersize=8)
+# plot leaking triadic → pairwise false positives
+scatter!(ax1, sds_to_plot_a[leak_to_plot_a], abs.(coeffs_to_plot_a[leak_to_plot_a]), color=leakcyan, alpha=0.7, markersize=8)
+# plot true pairwise positives
+scatter!(ax1, sds_to_plot_a[true_to_plot_a .& pwise_to_plot_a], abs.(coeffs_to_plot_a[true_to_plot_a .& pwise_to_plot_a]), color=pwblue, alpha=0.7, markersize=10)
+# plot true triadic positivies
+scatter!(ax1, sds_to_plot_a[true_to_plot_a .& .!pwise_to_plot_a], abs.(coeffs_to_plot_a[true_to_plot_a .& .!pwise_to_plot_a]), color=triteal, alpha=1.0, marker=:utriangle, markersize=10)
+
 # plot panel (b)
-xs = range(minimum(sds_to_plot), maximum(sds_to_plot), 100)
-maxy = maximum(abs.(coeffs_to_plot))
-xlims!(ax2, extrema(xs))
+xs_b = range(minimum(sds_to_plot_b), maximum(sds_to_plot_b), 100)
+xlims!(ax2, extrema(xs_b))
 ylims!(ax2, nothing, maxy)
 
 # color decision space 
-band!(ax2, xs, xs, maxy*ones(100), color=psblues[1], alpha=0.3)
-band!(ax2, xs, 2*xs, maxy*ones(100), color=psblues[2], alpha=0.3)
-band!(ax2, xs, 3*xs, maxy*ones(100), color=psblues[3], alpha=0.3)
-lines!(ax2, xs, xs, color=:black, linestyle=:dash, linewidth=1.0)
-lines!(ax2, xs, 2*xs, color=:black, linestyle=:dash, linewidth=1.0)
-lines!(ax2, xs, 3*xs, color=:black, linestyle=:dash, linewidth=1.0)
+band!(ax2, xs_b, xs_b, maxy*ones(100), color=psblues[1], alpha=0.3)
+band!(ax2, xs_b, 2*xs_b, maxy*ones(100), color=psblues[2], alpha=0.3)
+band!(ax2, xs_b, 3*xs_b, maxy*ones(100), color=psblues[3], alpha=0.3)
+lines!(ax2, xs_b, xs_b, color=:black, linestyle=:dash, linewidth=1.0)
+lines!(ax2, xs_b, 2*xs_b, color=:black, linestyle=:dash, linewidth=1.0)
+lines!(ax2, xs_b, 3*xs_b, color=:black, linestyle=:dash, linewidth=1.0)
 
 # plot false pairwise positives
-sc1 = scatter!(ax2, sds_to_plot[.!true_to_plot .& (pwise_to_plot .& .!leak_to_plot)], abs.(coeffs_to_plot[.!true_to_plot .& (pwise_to_plot .& .!leak_to_plot)]), color=falseorg, alpha=0.6, markersize=8)
+sc1 = scatter!(ax2, sds_to_plot_b[.!true_to_plot_b .& (pwise_to_plot_b .& .!leak_to_plot_b)], abs.(coeffs_to_plot_b[.!true_to_plot_b .& (pwise_to_plot_b .& .!leak_to_plot_b)]), color=falseorg, alpha=0.6, markersize=8)
 # plot false triadic positives
-sc2 = scatter!(ax2, sds_to_plot[.!true_to_plot .& .!pwise_to_plot], abs.(coeffs_to_plot[.!true_to_plot .& .!pwise_to_plot]), color=falseorg, alpha=0.6, marker=:utriangle, markersize=8)
+sc2 = scatter!(ax2, sds_to_plot_b[.!true_to_plot_b .& .!pwise_to_plot_b], abs.(coeffs_to_plot_b[.!true_to_plot_b .& .!pwise_to_plot_b]), color=falseorg, alpha=0.6, marker=:utriangle, markersize=8)
 # plot leaking triadic → pairwise false positives
-sc3 = scatter!(ax2, sds_to_plot[leak_to_plot], abs.(coeffs_to_plot[leak_to_plot]), color=leakcyan, alpha=0.7, markersize=8)
+sc3 = scatter!(ax2, sds_to_plot_b[leak_to_plot_b], abs.(coeffs_to_plot_b[leak_to_plot_b]), color=leakcyan, alpha=0.7, markersize=8)
 # plot true pairwise positives
-sc4 = scatter!(ax2, sds_to_plot[true_to_plot .& pwise_to_plot], abs.(coeffs_to_plot[true_to_plot .& pwise_to_plot]), color=pwblue, alpha=0.7, markersize=10)
+sc4 = scatter!(ax2, sds_to_plot_b[true_to_plot_b .& pwise_to_plot_b], abs.(coeffs_to_plot_b[true_to_plot_b .& pwise_to_plot_b]), color=pwblue, alpha=0.7, markersize=10)
 # plot true triadic positives
-sc5 = scatter!(ax2, sds_to_plot[true_to_plot .& .!pwise_to_plot], abs.(coeffs_to_plot[true_to_plot .& .!pwise_to_plot]), color=triteal, alpha=1.0, marker=:utriangle, markersize=10)
+sc5 = scatter!(ax2, sds_to_plot_b[true_to_plot_b .& .!pwise_to_plot_b], abs.(coeffs_to_plot_b[true_to_plot_b .& .!pwise_to_plot_b]), color=triteal, alpha=1.0, marker=:utriangle, markersize=10)
 
 # finishing touches
 ax1.title = "(a) Low noise (σ = 0.1)"
 ax2.title = "(b) High noise (σ = 0.5)"
 
+ax1.xlabel = rich("Conditional posterior s.d. σ", subscript("m | –m"))
 ax2.xlabel = rich("Conditional posterior s.d. σ", subscript("m | –m"))
 ax1.ylabel = "Coefficient magnitude |ξₘ|"
-ax2.ylabel = "Coefficient magnitude |ξₘ|"
 
-axislegend(ax2, [sc4, sc5, sc3, sc2, sc1], ["Pairwise TP", "Triadic TP", "Pairwise FP (from Δ)", "Triadic FP", "Pairwise FP"], nbanks=2, labelsize=8pt, rowgap=-7, padding=(0,4,-2,-2), position=:rb, patchlabelgap=1)
+axislegend(ax2, [sc4, sc5, sc3, sc2, sc1], ["Pairwise TP", "Triadic TP", "Pairwise FP (from Δ)", "Triadic FP", "Pairwise FP"], nbanks=2, labelsize=8pt, rowgap=-7, padding=(0,4,-2,-2), position=:rb, patchlabelgap=0, colgap=14)
 
 save(joinpath(@__DIR__, "..", "figs", "decision-space.png"), fig, dpi=300)
 display(fig)

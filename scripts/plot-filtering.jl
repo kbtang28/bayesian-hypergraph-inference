@@ -12,8 +12,8 @@ experiment_settings = [(40:2:400, 0.1), (40:5:500, 0.5)]
 n_itr = 300
 
 # figure set-up
-pt = 4 ÷ 3; inch = 96
-fig = Figure(size=(6.6inch, 3.0inch), fontsize=8pt)
+pt = 4 ÷ 3; inch = 96; cm = inch/2.54
+fig = Figure(size=(15cm, 7cm), fontsize=10pt)
 axs = [Axis(fig[row, col], xgridvisible=false, ygridvisible=false, ylabel="F1", limits=(nothing, (0.0, 1.0))) for row in 1:2, col in 1:2]
 linkyaxes!(vec(axs))
 hideydecorations!(axs[1,2])
@@ -54,8 +54,8 @@ N_array, σ = experiment_settings[2]
 xlims!(axs[2,1], N_array[1], N_array[end])
 xlims!(axs[2,2], N_array[1], N_array[end])
 
-F1s_coeff_mags = readdlm(joinpath(results_dir, "coeff-mags-$(σ)-F1s.txt")); F1s_coeff_mags = reshape(F1s_coeff_mags, 3, length(τs), n_itr, length(N_array))
-F1s_coeff_CIs = readdlm(joinpath(results_dir, "coeff-CIs-$(σ)-F1s.txt")); F1s_coeff_CIs = reshape(F1s_coeff_CIs, 3, length(levels), n_itr, length(N_array))
+F1s_coeff_mags = readdlm(joinpath(results_dir, "coeff-mags-$(σ)-F1s-$(timestamp).txt")); F1s_coeff_mags = reshape(F1s_coeff_mags, 3, length(τs), n_itr, length(N_array))
+F1s_coeff_CIs = readdlm(joinpath(results_dir, "coeff-CIs-$(σ)-F1s-$(timestamp).txt")); F1s_coeff_CIs = reshape(F1s_coeff_CIs, 3, length(levels), n_itr, length(N_array))
 
 for (col, i) in enumerate([1,3])
     for (l, τ) in enumerate(τs_to_plot)
@@ -81,17 +81,18 @@ Label(fig[2, 0], "High noise", font=:bold, rotation=pi/2, tellheight=false)
 
 # Legend(fig[3, 1:2], [grad_dash, grad_line], ["coefficient magnitude", "conditional posterior CI"], orientation=:horizontal, tellwidth=false, tellheight=false, padding=(5.0, 5.0, 0.0, 0.0))
 
-Colorbar(fig[3,1], size=8, label = "Coefficient magnitude τ", colormap=cgrad(psoranges, 6, categorical=true), vertical=false, ticks=(range(1/12, 11/12, 6), string.(τs_to_plot)), flipaxis=false)
-Colorbar(fig[3,2], size=8, label = "γ-credible interval", colormap=cgrad(psblues, 3, categorical=true), vertical=false, ticks=(range(1/6, 5/6, 3), string.(round.(levels, digits=3))), flipaxis=false)
+Colorbar(fig[3,1], size=6, label = "Coefficient magnitude τ", colormap=cgrad(psoranges, 6, categorical=true), vertical=false, ticks=(range(1/12, 11/12, 6), string.(τs_to_plot)), flipaxis=false)
+Colorbar(fig[3,2], size=6, label = "γ-credible interval", colormap=cgrad(psblues, 3, categorical=true), vertical=false, ticks=(range(1/6, 5/6, 3), string.(round.(levels, digits=3))), flipaxis=false)
 
-text!(axs[1,1], 0.035, 0.9, text="(a)", font=:bold, align=(:center, :center), space=:relative)
-text!(axs[1,2], 0.035, 0.9, text="(b)", font=:bold, align=(:center, :center), space=:relative)
-text!(axs[2,1], 0.035, 0.9, text="(c)", font=:bold, align=(:center, :center), space=:relative)
-text!(axs[2,2], 0.035, 0.9, text="(d)", font=:bold, align=(:center, :center), space=:relative)
+text!(axs[1,1], 0.05, 0.85, text="(a)", font=:bold, align=(:center, :center), space=:relative)
+text!(axs[1,2], 0.05, 0.85, text="(b)", font=:bold, align=(:center, :center), space=:relative)
+text!(axs[2,1], 0.05, 0.85, text="(c)", font=:bold, align=(:center, :center), space=:relative)
+text!(axs[2,2], 0.05, 0.85, text="(d)", font=:bold, align=(:center, :center), space=:relative)
 
 colgap!(fig.layout, 1, 5.0)
 colsize!(fig.layout, 1, Aspect(1, 4.0))
 colsize!(fig.layout, 2, Aspect(1, 4.0))
+rowgap!(fig.layout, 1, 6.0)
 rowgap!(fig.layout, 2, 6.0)
 # resize_to_layout!(fig)
 save(joinpath(@__DIR__, "..", "figs", "compare-filtering.png"), fig)

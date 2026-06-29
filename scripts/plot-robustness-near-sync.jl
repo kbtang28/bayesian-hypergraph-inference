@@ -37,7 +37,7 @@ lo_q = 0.1
 hi_q = 0.9
 
 pt = 4 ÷ 3; inch = 96; cm = inch/2.54
-fig = Figure(size=(3.3inch, 3.3inch), fontsize=10pt)
+fig = Figure(size=(15cm, 5.5cm), fontsize=10pt)
 
 ax1 = Axis(fig[1,1], xlabel="Condition number κ of Θ(X)", ylabel="Pooled AUROC", xscale=log10, xgridvisible=false, ygridvisible=false, limits=(nothing, nothing, nothing, 0.85))
 
@@ -61,19 +61,19 @@ band!(ax1, kappas[1:(end-1)], bayes_aurocs_lo[1:(end-1)], bayes_aurocs_hi[1:(end
 sc3 = scatterlines!(ax1, kappas[1:(end-1)], median_bayes_aurocs[1:(end-1)], markersize=10, color=bblue)
 emptysc = scatter!(ax1, NaN, NaN, marker=:circle, markersize=0)
 
-axislegend(ax1, [sc3, sc1, emptysc, sc2], ["B-THIS", "THIS (λ = 0.1)", "", "THIS (λ = 1.0)"], nbanks=2, rowgap=-9, colgap=8, padding=(5,5,-1,-1), position=:rt, markersize=8, linepoints=[Point2f(0.2, 0.5), Point2f(0.8, 0.5)], patchlabelgap=1)
+axislegend(ax1, [sc3, sc1, emptysc, sc2], ["Bayes-THIS", "THIS (λ = 0.1)", "", "THIS (λ = 1.0)"], nbanks=2, rowgap=-9, colgap=8, padding=(5,5,-1,-1), position=:rt, markersize=8, linepoints=[Point2f(0.2, 0.5), Point2f(0.8, 0.5)], patchlabelgap=1, fontsize=8pt)
 # axislegend(ax1, [sc3, sc2, sc1], ["Bayes-THIS", "THIS (λ = 1.0)", "THIS (λ = 0.1)"], labelsize=7pt, rowgap=-9, padding=(0,4,-2,-2), position=:lb, linepoints=[Point2f(0.2, 0.5), Point2f(0.8, 0.5)], patchlabelgap=1)
 
-gl = fig[2,1] = GridLayout()
-ax11 = Axis(gl[1,1], limits=(nothing, nothing, 0.0, nothing), xgridvisible=false, ygridvisible=false, ylabelfont=:bold, ylabel="True", title="κ = $(round(kappas[4], digits=2))")
-hidexdecorations!(ax11)
+gl = fig[1,2] = GridLayout()
+ax11 = Axis(gl[1,1], limits=(nothing, nothing, 0.0, nothing), xgridvisible=false, ygridvisible=false, ylabelfont=:bold, ylabel="True       ", title="κ = $(round(kappas[4], digits=2))", titlegap=9.0)
+# hidexdecorations!(ax11)
 hideydecorations!(ax11, label=false)
 
 density!(ax11, this_coeffs[46, 1, 5, :, 4], color=torange, alpha=0.65)
 density!(ax11, bayes_coeffs[46, 1, :, 4], color=bblue, alpha=0.65)
 vlines!(ax11, [0.0], color=:black, linewidth=1.0)
 
-ax21 = Axis(gl[2,1], limits=(nothing, nothing, 0.0, nothing), xgridvisible=false, ygridvisible=false, ylabelfont=:bold, ylabel="False", xlabel="Inferred ξ")
+ax21 = Axis(gl[2,1], limits=(nothing, nothing, 0.0, nothing), xgridvisible=false, ygridvisible=false, ylabelfont=:bold, ylabel="False     ", xlabel="Inferred ξ", xlabelpadding=9.0)
 linkxaxes!(ax11, ax21)
 hideydecorations!(ax21, label=false)
 
@@ -81,15 +81,15 @@ density!(ax21, this_coeffs[50, 1, 5, :, 4], color=torange, alpha=0.65)
 density!(ax21, bayes_coeffs[50, 1, :, 4], color=bblue, alpha=0.65)
 vlines!(ax21, [0.0], color=:black, linewidth=1.0)
 
-ax12 = Axis(gl[1,2], limits=(nothing, nothing, 0.0, nothing), xgridvisible=false, ygridvisible=false, title="κ = $(round(kappas[8], digits=2))")
-hidexdecorations!(ax12)
+ax12 = Axis(gl[1,2], limits=(nothing, nothing, 0.0, nothing), xgridvisible=false, ygridvisible=false, title="κ = $(round(kappas[8], digits=2))", titlegap=9.0)
+# hidexdecorations!(ax12)
 hideydecorations!(ax12)
 
 density!(ax12, this_coeffs[46, 1, 5, :, 8], color=torange, alpha=0.65)
 density!(ax12, bayes_coeffs[46, 1, :, 8], color=bblue, alpha=0.65)
 vlines!(ax12, [0.0], color=:black, linewidth=1.0)
 
-ax22 = Axis(gl[2,2], limits=(nothing, nothing, 0.0, nothing), xgridvisible=false, ygridvisible=false, xlabel="Inferred ξ")
+ax22 = Axis(gl[2,2], limits=(nothing, nothing, 0.0, nothing), xgridvisible=false, ygridvisible=false, xlabel="Inferred ξ", xlabelpadding=9.0)
 linkxaxes!(ax12, ax22)
 hideydecorations!(ax22)
 
@@ -97,10 +97,13 @@ density!(ax22, this_coeffs[50, 1, 5, :, 8], color=torange, alpha=0.65)
 density!(ax22, bayes_coeffs[50, 1, :, 8], color=bblue, alpha=0.65)
 vlines!(ax22, [0.0], color=:black, linewidth=1.0)
 
-rowgap!(gl, 1, 8.0)
-colgap!(gl, 1, 5.0)
+Box(gl[1, 1:2, Makie.GridLayoutBase.Outer()], strokecolor=:grey, color=:transparent, alignmode=Outside(-5,-10,-6,15), cornerradius=4, strokewidth=1)
+Box(gl[2, 1:2, Makie.GridLayoutBase.Outer()], strokecolor=:grey, color=:transparent, alignmode=Outside(-5,-10,15,-6), cornerradius=4, strokewidth=1)
 
-rowsize!(fig.layout, 2, Aspect(1, 0.4))
+# rowgap!(gl, 1, 8.0)
+# colgap!(gl, 1, 5.0)
+
+# rowsize!(fig.layout, 2, Aspect(1, 0.4))
 
 text!(ax1, 0.02, 0.98, text="(a)", space=:relative, font=:bold, align=(:left, :top))
 text!(ax11, 0.03, 0.95, text="(b)", space=:relative, font=:bold, align=(:left, :top))

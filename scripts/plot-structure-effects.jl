@@ -32,14 +32,14 @@ avg_auprcs = mean(auprcs, dims=2)[:, 1, :, :]
 avg_aurocs = mean(aurocs, dims=2)[:, 1, :, :]
 avg_F1s = mean(F1s, dims=2)[:, 1, :, :]
 
-pt = 4 ÷ 3; inch = 96
-fig = Figure(size=(3.35inch, 3.7inch), fontsize=10pt)
-ax1 = Axis(fig[1,1], ylabel="Pairwise F1", ylabelpadding=8, xgridvisible=false, ygridvisible=false)
+pt = 4 ÷ 3; inch = 96; cm = inch/2.54
+fig = Figure(size=(15cm, 5.5cm), fontsize=10pt)
+ax1 = Axis(fig[1,1], xlabel="Cross-order degree correlation", ylabel="Pairwise F1", ylabelpadding=8, xgridvisible=false, ygridvisible=false)
 # for (j, _) in Iterators.reverse(enumerate(alphas))
 #     scatter!(ax1, vec(deg_corr), vec(F1s[2, :, :, j]), color=(alpha_palette[j], 0.7))
 # end
 scatter!(ax1, vec(deg_corr), vec(F1s[2, :, :, 2]), color=(alpha_palette[2], 0.8))
-hidexdecorations!(ax1)
+# hidexdecorations!(ax1)
 
 axinset = Axis(fig[1,1], width=Relative(0.4), height=Relative(0.45), halign=0.94, valign=0.09, limits=(nothing, nothing, nothing, 1.0), ylabel="Pairwise F1", yticks=0.7:0.1:1.0, xgridvisible=false, ygridvisible=false)
 for (j, _) in Iterators.reverse(enumerate(alphas))
@@ -48,13 +48,12 @@ end
 linkyaxes!(ax1, axinset)
 hidexdecorations!(axinset)
 
-ax2 = Axis(fig[2,1], xlabel="Cross-order degree correlation", ylabel="Pairwise AUPRC", ylabelpadding=8, xgridvisible=false, ygridvisible=false)
+ax2 = Axis(fig[1,2], xlabel="Cross-order degree correlation", ylabel="Pairwise AUPRC", ylabelpadding=8, xgridvisible=false, ygridvisible=false)
 for j in length(alphas):-1:1
     scatter!(ax2, vec(deg_corr), vec(auprcs[2, :, :, j]), color=(alpha_palette[j], 0.9))
 end
 
-Colorbar(fig[1,2], width=8.0, limits=(-1.5, 3.5), colormap=cgrad(alpha_palette, 5, categorical=:true), ticks=log2.(alphas), label="log₂(c)", labelpadding=1, tickformat="{:d}", vertical=true)
-Colorbar(fig[2,2], width=8.0, limits=(-1.5, 3.5), colormap=cgrad(alpha_palette, 5, categorical=:true), ticks=log2.(alphas), label="log₂(c)", labelpadding=1, tickformat="{:d}", vertical=true)
+Colorbar(fig[1,3], width=8.0, limits=(-1.5, 3.5), colormap=cgrad(alpha_palette, 5, categorical=:true), ticks=log2.(alphas), label="log₂(c)", labelpadding=1, tickformat="{:d}", vertical=true)
 
 # Colorbar(fig.layout[2,1], limits=(-1.5, 3.5), alignmode=Outside(3), colormap=cgrad(blues, 5, categorical=:true), ticks=log2.(alphas), tellwidth=false, tellheight=false, flipaxis=true, height=Relative(0.35), width=Relative(0.6), halign=:right, valign=:bottom, label="log₂(c)", labelpadding=1, tickformat="{:d}", vertical=false)
 
@@ -63,10 +62,12 @@ text!(axinset, 0.12, 0.88, text="(b)", font=:bold, align=(:center, :center), spa
 text!(ax2, 0.05, 0.94, text="(c)", font=:bold, align=(:center, :center), space=:relative)
 
 colsize!(fig.layout, 1, Aspect(1, 1.6))
+colsize!(fig.layout, 2, Aspect(1, 1.6))
 # colsize!(fig.layout, 2, Aspect(1, 0.7))
-rowgap!(fig.layout, 1, 10.0)
-colgap!(fig.layout, 1, 5.0)
-Label(fig[3,1], "⟵ Increasing num. node swaps", valign=:top, padding=(0,0,-10,-10))
+colgap!(fig.layout, 1, 8.0)
+colgap!(fig.layout, 2, 5.0)
+Label(fig[2,1], "⟵ Increasing num. node swaps", valign=:top, padding=(0,0,-10,-10), tellwidth=false)
+Label(fig[2,2], "⟵ Increasing num. node swaps", valign=:top, padding=(0,0,-10,-10), tellwidth=false)
 
 save(joinpath(@__DIR__, "..", "figs", "pairwise-inference-vs-codc.png"), fig, dpi=300)
 fig

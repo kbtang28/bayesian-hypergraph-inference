@@ -11,33 +11,33 @@ n_itr = 300
 results_dir = joinpath(@__DIR__, "..", "out", "robustness")
 date = "2026-05-02"
 
-bayes_aurocs = zeros(Float64, 3, n_itr, length(N_array), length(σ_array))
-bayes_auprcs = zeros(Float64, 3, n_itr, length(N_array), length(σ_array))
-this_aurocs  = zeros(Float64, 3, length(λs), n_itr, length(N_array), length(σ_array))
-this_auprcs  = zeros(Float64, 3, length(λs), n_itr, length(N_array), length(σ_array))
+# bayes_aurocs = zeros(Float64, 3, n_itr, length(N_array), length(σ_array))
+# bayes_auprcs = zeros(Float64, 3, n_itr, length(N_array), length(σ_array))
+# this_aurocs  = zeros(Float64, 3, length(λs), n_itr, length(N_array), length(σ_array))
+# this_auprcs  = zeros(Float64, 3, length(λs), n_itr, length(N_array), length(σ_array))
 
-for (j, _) in enumerate(σ_array)
-    tmp_bayes_aurocs = readdlm(joinpath(results_dir, "bayes-aurocs-$(j)-$(date).txt"))
-    tmp_bayes_aurocs = reshape(tmp_bayes_aurocs, 3, n_itr, length(N_array))
-    bayes_aurocs[:, :, :, j] .= tmp_bayes_aurocs
+# for (j, _) in enumerate(σ_array)
+#     tmp_bayes_aurocs = readdlm(joinpath(results_dir, "bayes-aurocs-$(j)-$(date).txt"))
+#     tmp_bayes_aurocs = reshape(tmp_bayes_aurocs, 3, n_itr, length(N_array))
+#     bayes_aurocs[:, :, :, j] .= tmp_bayes_aurocs
 
-    tmp_bayes_auprcs = readdlm(joinpath(results_dir, "bayes-auprcs-$(j)-$(date).txt"))
-    tmp_bayes_auprcs = reshape(tmp_bayes_auprcs, 3, n_itr, length(N_array))
-    bayes_auprcs[:, :, :, j] .= tmp_bayes_auprcs
+#     tmp_bayes_auprcs = readdlm(joinpath(results_dir, "bayes-auprcs-$(j)-$(date).txt"))
+#     tmp_bayes_auprcs = reshape(tmp_bayes_auprcs, 3, n_itr, length(N_array))
+#     bayes_auprcs[:, :, :, j] .= tmp_bayes_auprcs
 
-    tmp_this_aurocs = readdlm(joinpath(results_dir, "this-aurocs-$(j)-$(date).txt"))
-    tmp_this_aurocs = reshape(tmp_this_aurocs, 3, length(λs), n_itr, length(N_array))
-    this_aurocs[:, :, :, :, j] .= tmp_this_aurocs
+#     tmp_this_aurocs = readdlm(joinpath(results_dir, "this-aurocs-$(j)-$(date).txt"))
+#     tmp_this_aurocs = reshape(tmp_this_aurocs, 3, length(λs), n_itr, length(N_array))
+#     this_aurocs[:, :, :, :, j] .= tmp_this_aurocs
 
-    tmp_this_auprcs = readdlm(joinpath(results_dir, "this-auprcs-$(j)-$(date).txt"))
-    tmp_this_auprcs = reshape(tmp_this_auprcs, 3, length(λs), n_itr, length(N_array))
-    this_auprcs[:, :, :, :, j] .= tmp_this_auprcs
-end
+#     tmp_this_auprcs = readdlm(joinpath(results_dir, "this-auprcs-$(j)-$(date).txt"))
+#     tmp_this_auprcs = reshape(tmp_this_auprcs, 3, length(λs), n_itr, length(N_array))
+#     this_auprcs[:, :, :, :, j] .= tmp_this_auprcs
+# end
 
-writedlm(joinpath(results_dir, "bayes-aurocs.txt"), bayes_aurocs)
-writedlm(joinpath(results_dir, "bayes-auprcs.txt"), bayes_auprcs)
-writedlm(joinpath(results_dir, "this-aurocs.txt"), this_aurocs)
-writedlm(joinpath(results_dir, "this-auprcs.txt"), this_auprcs)
+# writedlm(joinpath(results_dir, "bayes-aurocs.txt"), bayes_aurocs)
+# writedlm(joinpath(results_dir, "bayes-auprcs.txt"), bayes_auprcs)
+# writedlm(joinpath(results_dir, "this-aurocs.txt"), this_aurocs)
+# writedlm(joinpath(results_dir, "this-auprcs.txt"), this_auprcs)
 
 bayes_aurocs = readdlm(joinpath(results_dir, "bayes-aurocs.txt"))
 bayes_aurocs = reshape(bayes_aurocs, 3, n_itr, length(N_array), length(σ_array));
@@ -50,7 +50,7 @@ this_auprcs  = reshape(this_auprcs, 3, length(λs), n_itr, length(N_array), leng
 
 # figure set-up
 pt = 4 ÷ 3; inch = 96; cm = inch/2.54
-fig = Figure(size=(17cm, 10.75cm), fontsize=10pt)
+fig = Figure(size=(15cm, 10.75cm), fontsize=10pt)
 axs = [Axis(fig[row, col], xlabel="N", xlabelpadding=2.0, ylabel="σ", limits=(nothing, (0.05, 1.0)), yticks=[0.05, 0.5, 1.0], ytickformat="{:.2f}") for row in 2:5, col in 2:4]
 
 hideydecorations!(axs[1, 2])
@@ -117,10 +117,10 @@ Box(fig[2:3, 2:5, Makie.GridLayoutBase.Outer()], color=:transparent, alignmode=O
 Box(fig[4:5, 2:5, Makie.GridLayoutBase.Outer()], color=:transparent, alignmode=Outside(-5,-10,-10,-10), cornerradius=4, strokewidth=1)
 
 Colorbar(fig[2,5], label="AUROC", colormap=:cmr_ember, colorrange=crange_auc, ticks=range(crange_auc[1], crange_auc[2], 3), tickformat="{:.2f}")
-Colorbar(fig[3,5], label="Mean difference", colormap=:cmr_prinsenvlag, colorrange=crange)
+Colorbar(fig[3,5], label="Mean difference", colormap=:cmr_prinsenvlag, colorrange=crange, ticks=range(crange[1], crange[2], 3), tickformat="{:.2f}")
 
 Colorbar(fig[4,5], label="AUPRC", colormap=:cmr_ember, colorrange=crange_tri_auc, ticks=range(crange_tri_auc[1], crange_tri_auc[2], 3), tickformat="{:.2f}")
-Colorbar(fig[5,5], label="Mean difference", colormap=:cmr_prinsenvlag, colorrange=crange_tri)
+Colorbar(fig[5,5], label="Mean difference", colormap=:cmr_prinsenvlag, colorrange=crange_tri, ticks=range(crange_tri[1], crange_tri[2], 3), tickformat="{:.2f}")
 
 rowsize!(fig.layout, 2, Aspect(2, 0.3))
 rowsize!(fig.layout, 3, Aspect(3, 0.3))
@@ -144,5 +144,5 @@ text!(axs[3,3], 590, 0.1, text="(h)", font=:bold, align=(:right, :bottom))
 text!(axs[4,2], 590, 0.1, text="(i)", font=:bold, align=(:right, :bottom))
 text!(axs[4,3], 590, 0.1, text="(j)", font=:bold, align=(:right, :bottom))
 
-# save(joinpath(@__DIR__, "..", "figs", "compare-robustness-sweeps.png"), fig, dpi=300)
+save(joinpath(@__DIR__, "..", "figs", "compare-robustness-sweeps.png"), fig, dpi=300)
 fig

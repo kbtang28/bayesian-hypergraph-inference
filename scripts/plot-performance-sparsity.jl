@@ -29,20 +29,20 @@ this_auprcs  = reshape(this_auprcs, 3, length(λs), n_itr, length(t2_array), len
 
 # figure set-up
 pt = 4 ÷ 3; inch = 96; cm = inch/2.54
-fig = Figure(size=(3.35inch, 4.85inch), fontsize=10pt)
-axs = [Axis(fig[row, col], xlabel="ρ₂", xlabelpadding=2.0, xticks=(5:5:length(t2_array), string.(t2_array[5:5:end])), yticks=(5:5:length(t3_array), string.(t3_array[5:5:end])), ylabel="ρ₃", limits=(nothing, nothing), xticklabelrotation=pi/12) for row in 2:5, col in 2:3]
+fig = Figure(size=(15cm, 7.2cm), fontsize=10pt)
+axs = [Axis(fig[row, col], xlabel="ρ₂", xlabelpadding=2.0, xticks=(5:5:length(t2_array), string.(t2_array[5:5:end])), yticks=(5:5:length(t3_array), string.(t3_array[5:5:end])), ylabel="ρ₃", limits=(nothing, nothing), xticklabelrotation=pi/4) for row in 2:3, col in [2,3,6,7]]
 
 hideydecorations!(axs[1, 2])
-hideydecorations!(axs[3, 2])
+hideydecorations!(axs[1, 4])
 hidedecorations!(axs[2, 1])
-hidedecorations!(axs[4, 1])
+hidedecorations!(axs[2, 3])
 hidespines!(axs[2, 1])
-hidespines!(axs[4, 1])
+hidespines!(axs[2, 3])
 
 axs[2,1].xgridvisible=false
 axs[2,1].ygridvisible=false
-axs[4,1].xgridvisible=false
-axs[4,1].ygridvisible=false
+axs[2,3].xgridvisible=false
+axs[2,3].ygridvisible=false
 
 λ_id = 3 # λ = 0.1
 
@@ -64,47 +64,47 @@ heatmap!(axs[2,2], 1:length(t2_array), 1:length(t3_array), mean_diff, colormap=:
 
 # crange_tri_auc = extrema(vcat(tri_auc, this_tri_auc))
 crange_tri_auc = (0.0, 1.0)
-heatmap!(axs[3,1], 1:length(t2_array), 1:length(t3_array), tri_auc, colormap=:cmr_ember, colorrange=crange_tri_auc)
-heatmap!(axs[3,2], 1:length(t2_array), 1:length(t3_array), this_tri_auc, colormap=:cmr_ember, colorrange=crange_tri_auc)
+heatmap!(axs[1,3], 1:length(t2_array), 1:length(t3_array), tri_auc, colormap=:cmr_ember, colorrange=crange_tri_auc)
+heatmap!(axs[1,4], 1:length(t2_array), 1:length(t3_array), this_tri_auc, colormap=:cmr_ember, colorrange=crange_tri_auc)
 
 mean_tri_diff = tri_auc .- this_tri_auc
 
 tri_cmin, tri_cmax = extrema(mean_tri_diff)
 crange_tri = (-maximum(abs.([tri_cmin, tri_cmax])), maximum(abs.([tri_cmin, tri_cmax])))
-heatmap!(axs[4,2], 1:length(t2_array), 1:length(t3_array), mean_tri_diff, colormap=:cmr_prinsenvlag, colorrange=crange_tri)
+heatmap!(axs[2,4], 1:length(t2_array), 1:length(t3_array), mean_tri_diff, colormap=:cmr_prinsenvlag, colorrange=crange_tri)
 
 # finishing touches
 Label(fig[1,2], "Bayes-THIS", font=:bold, tellwidth=false, padding=(0,0,-5,0))
 Label(fig[1,3], "THIS (λ = 0.1)", font=:bold, tellwidth=false, padding=(0,0,-5,0))
+Label(fig[1,6], "Bayes-THIS", font=:bold, tellwidth=false, padding=(0,0,-5,0))
+Label(fig[1,7], "THIS (λ = 0.1)", font=:bold, tellwidth=false, padding=(0,0,-5,0))
 
-Label(fig[2:3,1], "Pairwise + triadic interactions", tellheight=false, font=:bold, rotation=pi/2, padding=(0,-5,-25,0))
-Label(fig[4:5,1], "Triadic interactions", tellheight=false, font=:bold, rotation=pi/2, padding=(0,-5,-25,0))
+Label(fig[2:3,1], "Pairwise + triadic interactions", tellheight=false, font=:bold, rotation=pi/2, padding=(0,-13,-25,0))
+Label(fig[2:3,5], "Triadic interactions", tellheight=false, font=:bold, rotation=pi/2, padding=(0,-13,-25,0))
 
 Box(fig[2:3, 2:4, Makie.GridLayoutBase.Outer()], color=:transparent, alignmode=Outside(-5,-10,-10,-10), cornerradius=4, strokewidth=1)
-Box(fig[4:5, 2:4, Makie.GridLayoutBase.Outer()], color=:transparent, alignmode=Outside(-5,-10,-10,-10), cornerradius=4, strokewidth=1)
+Box(fig[2:3, 6:8, Makie.GridLayoutBase.Outer()], color=:transparent, alignmode=Outside(-5,-10,-10,-10), cornerradius=4, strokewidth=1)
 
-Colorbar(fig[2,4], label="AUROC", colormap=:cmr_ember, colorrange=crange_auc, ticks=range(crange_auc[1], crange_auc[2], 3), tickformat="{:.2f}")
-Colorbar(fig[3,4], label="Mean difference", colormap=:cmr_prinsenvlag, colorrange=crange, tickformat="{:.2f}")
+Colorbar(fig[2,4], size=6, label="AUROC", colormap=:cmr_ember, colorrange=crange_auc, ticks=range(crange_auc[1], crange_auc[2], 3), tickformat="{:.2f}")
+Colorbar(fig[3,4], size=6, label="Mean difference", colormap=:cmr_prinsenvlag, colorrange=crange, tickformat="{:.2f}")
 
-Colorbar(fig[4,4], label="AUPRC", colormap=:cmr_ember, colorrange=crange_tri_auc, ticks=range(crange_tri_auc[1], crange_tri_auc[2], 3), tickformat="{:.2f}")
-Colorbar(fig[5,4], label="Mean difference", colormap=:cmr_prinsenvlag, colorrange=(crange_tri), ticks=-0.02:0.02:0.02, tickformat="{:.2f}")
+Colorbar(fig[2,8], size=6, label="AUPRC", colormap=:cmr_ember, colorrange=crange_tri_auc, ticks=range(crange_tri_auc[1], crange_tri_auc[2], 3), tickformat="{:.2f}")
+Colorbar(fig[3,8], size=6, label="Mean difference", colormap=:cmr_prinsenvlag, colorrange=(crange_tri), ticks=-0.02:0.02:0.02, tickformat="{:.2f}")
 
-rowsize!(fig.layout, 2, Aspect(2, 0.7))
-rowsize!(fig.layout, 3, Aspect(3, 0.7))
-rowsize!(fig.layout, 4, Aspect(2, 0.7))
-rowsize!(fig.layout, 5, Aspect(3, 0.7))
+rowsize!(fig.layout, 2, Aspect(2, 1.0))
+rowsize!(fig.layout, 3, Aspect(3, 1.0))
 rowgap!(fig.layout, 2, 10.0)
-rowgap!(fig.layout, 3, 25.0)
-rowgap!(fig.layout, 4, 10.0)
 colgap!(fig.layout, 2, -32.0)
 colgap!(fig.layout, 3, 5.0)
+colgap!(fig.layout, 6, -32.0)
+colgap!(fig.layout, 7, 5.0)
 
-text!(axs[1,1], 0.77, 0.95, text="(a)", space=:relative, font=:bold, align=(:left, :top))
-text!(axs[1,2], 0.77, 0.95, text="(b)", space=:relative, font=:bold, align=(:left, :top))
-text!(axs[2,2], 0.77, 0.95, text="(c)", space=:relative, font=:bold, align=(:left, :top))
-text!(axs[3,1], 0.77, 0.95, text="(d)", space=:relative, font=:bold, align=(:left, :top))
-text!(axs[3,2], 0.77, 0.95, text="(e)", space=:relative, font=:bold, align=(:left, :top))
-text!(axs[4,2], 0.77, 0.95, text="(f)", space=:relative, font=:bold, align=(:left, :top))
+text!(axs[1,1], 0.9, 0.95, text="(a)", space=:relative, font=:bold, align=(:right, :top))
+text!(axs[1,2], 0.9, 0.95, text="(b)", space=:relative, font=:bold, align=(:right, :top))
+text!(axs[2,2], 0.9, 0.95, text="(c)", space=:relative, font=:bold, align=(:right, :top))
+text!(axs[1,3], 0.9, 0.95, text="(d)", space=:relative, font=:bold, align=(:right, :top))
+text!(axs[1,4], 0.9, 0.95, text="(e)", space=:relative, font=:bold, align=(:right, :top))
+text!(axs[2,4], 0.9, 0.95, text="(f)", space=:relative, font=:bold, align=(:right, :top))
 
 save(joinpath(@__DIR__, "..", "figs", "compare-robustness-sparsity.png"), fig, dpi=300)
 fig
