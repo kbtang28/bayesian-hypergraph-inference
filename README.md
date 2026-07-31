@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/1046517867.svg)](https://doi.org/10.5281/zenodo.20040617)
+<a href="https://doi.org/10.5281/zenodo.20040618"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.20040618.svg" alt="DOI"></a>
 
 # Bayesian hypergraph inference from dynamics
 
