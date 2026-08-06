@@ -17,10 +17,10 @@ include("finite-diffs.jl")
 include("gen-rand-hyperg.jl")
 include("hyperg-kuramoto.jl")
 include("performance-measures.jl")
-include("sample-posterior.jl")
 include("structure-utils.jl")
 include("this-bayes.jl")
 include("this-tools.jl")
 include("this.jl")
+include("uq.jl")
 
 end
