@@ -19,7 +19,7 @@ function f_kuramoto_3rd(θ::Vector{Float64}, A2l::Matrix{Float64}, A3l::Matrix{F
 	for l in axes(A3l, 1)
 		i,j,k = Int64.(A3l[l,1:3])
 		a = A3l[l,4]
-		fθ[i] -= a * (sin(2*θ[i] - θ[j] - θ[k] - ϕ3) + sin(ϕ3))
+		fθ[i] -= 2 * a * (sin(2*θ[i] - θ[j] - θ[k] - ϕ3) + sin(ϕ3))
 	end
 
 	return fθ
