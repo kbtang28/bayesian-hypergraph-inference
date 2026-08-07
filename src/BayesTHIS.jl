@@ -6,7 +6,7 @@ export gnm_random_hyperg, hyperg_connected
 export f_kuramoto_3rd, f_kuramoto_3rd!
 export my_ROC, my_PRC, my_F1, get_auc, get_aurocs, get_auprcs
 export sample_posterior, sample_joint_posterior, significant_coeff
-export degrees, degree_corr, degree_hetero_ratio, flag_complex, shuffle_hyperedges, shuffle_hyperedges!, swap_nodes
+export degrees, degree_corr, degree_hetero_ratio, flag_complex, flag_complex_fixed, shuffle_hyperedges, shuffle_hyperedges!, swap_nodes, triads, triadic_from_list, triadic_degrees, permute_triads, dc_bounds, dc_null, anneal_to_dc, _random_absent_triad, anneal_triads, pair_alignment
 export this_bayes
 export this
 export get_θd, get_thetad, get_θ, get_theta, get_d, get_Ainf
