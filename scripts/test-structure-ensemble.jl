@@ -160,11 +160,11 @@ end
 
 # write results
 timestamp = Dates.format(now(), "yyyy-mm-dd")
-out_dir   = joinpath(@__DIR__, "..", "out", "dc-ensemble")
+out_dir   = joinpath(@__DIR__, "..", "out", "structure-ensemble")
 isdir(out_dir) || mkpath(out_dir)
 
 M = permutedims(hcat(all_rows...))
-open(joinpath(out_dir, "dc-ensemble-$(timestamp).csv"), "w") do io
+open(joinpath(out_dir, "structure-ensemble-$(timestamp).csv"), "w") do io
     writedlm(io, header, ',')
     writedlm(io, M, ',')
 end
