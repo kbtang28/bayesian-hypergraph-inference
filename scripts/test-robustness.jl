@@ -15,6 +15,8 @@ end
     using Random, Printf, LinearAlgebra, Dates, DelimitedFiles, ProgressMeter, Statistics
 end
 
+Random.seed!(117)
+
 # experiment & model parameters (master)
 n = 10; t2 = 0.35; t3 = 0.06
 A2, A3, A2l, A3l = gnm_random_hyperg(n, t2, t3)
